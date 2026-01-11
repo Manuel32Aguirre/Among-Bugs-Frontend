@@ -23,6 +23,7 @@ export class TriviaRatingsComponent implements OnInit {
 
   // Formulario para nuevo rating
   newRating = {
+    triviaId: 0,
     score: 0,
     comment: ''
   };
@@ -73,11 +74,11 @@ export class TriviaRatingsComponent implements OnInit {
       });
       return;
     }
-
+    this.newRating.triviaId = this.triviaId;
     const token = localStorage.getItem('authToken');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.post(`http://localhost:8080/api/ratings/trivia/${this.triviaId}`, this.newRating, { headers })
+    this.http.post(`http://localhost:8080/api/ratings/trivia`, this.newRating, { headers })
       .subscribe({
         next: () => {
           Swal.fire({
@@ -89,7 +90,7 @@ export class TriviaRatingsComponent implements OnInit {
           });
 
           // Resetear formulario y recargar ratings
-          this.newRating = { score: 0, comment: '' };
+          this.newRating = { triviaId: 0, score: 0, comment: '' };
           this.loadRatings();
         },
         error: (err) => {
