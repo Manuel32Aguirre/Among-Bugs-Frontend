@@ -38,7 +38,7 @@ export class TriviaRatingsComponent implements OnInit {
     const token = localStorage.getItem('authToken');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.get(`http://localhost:8080/api/ratings/trivia/${this.triviaId}`, { headers })
+    this.http.get(`https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api/ratings/trivia/${this.triviaId}`, { headers })
       .subscribe({
         next: (response: any) => {
           this.ratings = response.ratings;
@@ -78,7 +78,7 @@ export class TriviaRatingsComponent implements OnInit {
     const token = localStorage.getItem('authToken');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.post(`http://localhost:8080/api/ratings/trivia`, this.newRating, { headers })
+    this.http.post(`https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api/ratings/trivia`, this.newRating, { headers })
       .subscribe({
         next: () => {
           Swal.fire({
@@ -119,7 +119,7 @@ export class TriviaRatingsComponent implements OnInit {
         const token = localStorage.getItem('authToken');
         const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-        this.http.delete(`http://localhost:8080/api/ratings/${ratingId}`, { headers })
+        this.http.delete(`https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api/ratings/${ratingId}`, { headers })
           .subscribe({
             next: () => {
               Swal.fire({

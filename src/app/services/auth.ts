@@ -1,13 +1,17 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
-  // Base URL general de tu API
-  private baseUrl = 'http://localhost:8080/api';
+  //Prueba, variable hardcodeada
+  private baseUrl = 'https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api';
+
+
 
   // Header para recibir mensajes en español
   private getHeaders() {

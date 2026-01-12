@@ -38,7 +38,7 @@ export class PlayTriviaComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
-  private baseUrl = 'http://localhost:8080/api';
+  private baseUrl = 'https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api';
 
   trivia: TriviaData | null = null;
   currentQuestionIndex = 0;
