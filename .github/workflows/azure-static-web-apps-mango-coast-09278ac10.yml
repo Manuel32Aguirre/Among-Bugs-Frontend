@@ -1,5 +1,4 @@
 name: Azure Static Web Apps CI/CD
-
 on:
   push:
     branches:
@@ -48,5 +47,6 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }} # <--- Agrégalo aquí también
           action: "close"
+
 
 
