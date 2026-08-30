@@ -9,6 +9,7 @@ import { RoomService } from '../../services/room.service';
 import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { apiErrorMessage } from '../../utils/api-error';
+import { copyToClipboard } from '../../utils/clipboard';
 import { environment } from '../../../environments/environment';
 
 const MIN_PLAYERS = 3;
@@ -91,7 +92,6 @@ export class TeamGameComponent implements OnInit, OnDestroy {
         if (Number(playerId) === event.targetPlayerId) {
           this.myQuestion = event.updatedQuestion;
           this.syncTimer();
-          Swal.fire({ icon: 'warning', title: this.lang.t('game.trick'), text: event.message, confirmButtonColor: '#7c3aed' });
           this.cdr.detectChanges();
         }
       }
@@ -261,11 +261,11 @@ export class TeamGameComponent implements OnInit, OnDestroy {
 
   get canApplyTrick() {
     return this.isTraitor && this.myRole?.alive && this.state?.status === 'PLAYING'
-      && (this.myRole?.tricksUsedThisRound ?? 0) < 3;
+      && (this.state?.canApplyTrick ?? false);
   }
 
   get tricksRemaining() {
-    return Math.max(0, 3 - (this.myRole?.tricksUsedThisRound ?? 0));
+    return this.state?.tricksRemaining ?? 0;
   }
 
   get canStartGame() {
@@ -295,14 +295,18 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   }
 
   copyCode(): void {
-    navigator.clipboard.writeText(this.state?.code || this.code).then(() => {
+    copyToClipboard(this.state?.code || this.code).then(() => {
       Swal.fire({ icon: 'success', title: this.lang.t('game.copied'), timer: 1000, showConfirmButton: false });
+    }).catch(() => {
+      Swal.fire(this.lang.t('common.error'), this.lang.t('game.copyFailed'), 'error');
     });
   }
 
   copyJoinLink(): void {
-    navigator.clipboard.writeText(this.joinUrl).then(() => {
+    copyToClipboard(this.joinUrl).then(() => {
       Swal.fire({ icon: 'success', title: this.lang.t('game.linkCopied'), timer: 1000, showConfirmButton: false });
+    }).catch(() => {
+      Swal.fire(this.lang.t('common.error'), this.lang.t('game.copyFailed'), 'error');
     });
   }
 
@@ -361,7 +365,6 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.roomService.applyTrick(this.code, trickType).subscribe({
       next: () => {
         this.showTrickModal = false;
-        Swal.fire({ icon: 'success', title: this.lang.t('game.trickOn'), timer: 1200, showConfirmButton: false });
         this.cdr.detectChanges();
       },
       error: (err) => Swal.fire('Error', apiErrorMessage(err), 'error')

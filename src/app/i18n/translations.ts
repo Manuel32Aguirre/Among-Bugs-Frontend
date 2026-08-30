@@ -127,6 +127,7 @@ export const TRANSLATIONS: Record<AppLang, Record<string, string>> = {
     'game.guestQrHint': 'Escanea el QR o comparte el enlace. Solo piden un nombre.',
     'game.copyLink': 'Copiar enlace',
     'game.linkCopied': 'Enlace copiado',
+    'game.copyFailed': 'No se pudo copiar. Selecciona el enlace manualmente.',
     'game.guestTag': 'invitado',
 
     'guest.eyebrow': 'Entrada rápida',
@@ -266,6 +267,7 @@ export const TRANSLATIONS: Record<AppLang, Record<string, string>> = {
     'game.guestQrHint': 'Scan the QR or share the link. They only need a name.',
     'game.copyLink': 'Copy link',
     'game.linkCopied': 'Link copied',
+    'game.copyFailed': 'Could not copy. Select the link manually.',
     'game.guestTag': 'guest',
 
     'guest.eyebrow': 'Quick join',
