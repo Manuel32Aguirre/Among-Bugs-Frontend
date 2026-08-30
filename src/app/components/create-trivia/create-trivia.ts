@@ -16,6 +16,12 @@ export class CreateTriviaComponent {
   private triviaService = inject(TriviaService);
   private router = inject(Router);
 
+  creationMode: 'manual' | 'ai' = 'manual';
+  aiPrompt = '';
+  aiQuestionCount = 5;
+  aiIsPublic = true;
+  generating = false;
+
   trivia = {
     title: '',
     description: '',
@@ -116,6 +122,57 @@ export class CreateTriviaComponent {
   markAsCorrect(qIndex: number, optIndex: number) {
     this.trivia.questions[qIndex].options.forEach((opt: any, idx: number) => {
       opt.isCorrect = (idx === optIndex);
+    });
+  }
+
+  onGenerateWithAi(): void {
+    const prompt = this.aiPrompt.trim();
+    if (prompt.length < 5) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: 'Describe el tema de la trivia (mínimo 5 caracteres).',
+        confirmButtonColor: '#111827'
+      });
+      return;
+    }
+
+    if (this.aiQuestionCount < 1 || this.aiQuestionCount > 20) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: 'El número de preguntas debe estar entre 1 y 20.',
+        confirmButtonColor: '#111827'
+      });
+      return;
+    }
+
+    this.generating = true;
+    this.triviaService.generateTriviaFromPrompt({
+      prompt,
+      questionCount: this.aiQuestionCount,
+      isPublic: this.aiIsPublic
+    }).subscribe({
+      next: () => {
+        this.generating = false;
+        Swal.fire({
+          icon: 'success',
+          title: '¡Trivia generada!',
+          text: 'La IA creó tu trivia correctamente.',
+          timer: 1800,
+          showConfirmButton: false
+        });
+        setTimeout(() => this.router.navigate(['/home']), 1800);
+      },
+      error: (err: any) => {
+        this.generating = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al generar',
+          text: err.error?.message || 'No se pudo generar la trivia con IA.',
+          confirmButtonColor: '#111827'
+        });
+      }
     });
   }
 

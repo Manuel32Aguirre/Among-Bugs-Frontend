@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from './auth';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -9,8 +10,7 @@ export class TriviaService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
-  // URL base del controlador en el backend
-  private baseUrl = 'https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api/trivia';
+  private baseUrl = `${environment.apiBaseUrl}/trivia`;
 
   /**
    * Genera los headers con el Token JWT y el idioma
@@ -48,6 +48,13 @@ export class TriviaService {
    */
   createTrivia(triviaData: any) {
     return this.http.post(this.baseUrl, triviaData, { headers: this.getHeaders() });
+  }
+
+  /**
+   * Generar y crear una trivia con IA (Groq) a partir de un prompt.
+   */
+  generateTriviaFromPrompt(data: { prompt: string; questionCount: number; isPublic: boolean }) {
+    return this.http.post(`${this.baseUrl}/generate`, data, { headers: this.getHeaders() });
   }
 
   /**

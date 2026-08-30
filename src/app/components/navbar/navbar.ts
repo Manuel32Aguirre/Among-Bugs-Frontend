@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../services/auth';
 import { Subscription, filter } from 'rxjs';
 import Swal from 'sweetalert2';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-navbar',
@@ -18,7 +19,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
-  private baseUrl = 'https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api';
+  private baseUrl = environment.apiBaseUrl;
 
   username: string = '';
   userEmail: string = '';
@@ -80,11 +81,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   downloadStats(): void {
-    const token = localStorage.getItem('authToken');
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-
     Swal.fire({
       title: 'Descargando...',
       text: 'Generando tu reporte de estadísticas',
@@ -95,7 +91,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
 
     this.http.get(`${this.baseUrl}/trivia/stats/report`, {
-      headers: headers,
       responseType: 'blob',
       observe: 'response'
     }).subscribe({

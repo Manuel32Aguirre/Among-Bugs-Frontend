@@ -1,8 +1,10 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import Swal from 'sweetalert2';
+import { environment } from '../../../environments/environment';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-trivia-ratings',
@@ -15,6 +17,7 @@ export class TriviaRatingsComponent implements OnInit {
   @Input() triviaId!: number;
 
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   ratings: any[] = [];
   averageRating: number = 0;
@@ -35,10 +38,7 @@ export class TriviaRatingsComponent implements OnInit {
   }
 
   loadRatings(): void {
-    const token = localStorage.getItem('authToken');
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get(`https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api/ratings/trivia/${this.triviaId}`, { headers })
+    this.http.get(`${environment.apiBaseUrl}/ratings/trivia/${this.triviaId}`)
       .subscribe({
         next: (response: any) => {
           this.ratings = response.ratings;
@@ -75,10 +75,7 @@ export class TriviaRatingsComponent implements OnInit {
       return;
     }
     this.newRating.triviaId = this.triviaId;
-    const token = localStorage.getItem('authToken');
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.post(`https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api/ratings/trivia`, this.newRating, { headers })
+    this.http.post(`${environment.apiBaseUrl}/ratings/trivia`, this.newRating)
       .subscribe({
         next: () => {
           Swal.fire({
@@ -116,10 +113,7 @@ export class TriviaRatingsComponent implements OnInit {
       cancelButtonColor: '#6b7280'
     }).then((result) => {
       if (result.isConfirmed) {
-        const token = localStorage.getItem('authToken');
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-        this.http.delete(`https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api/ratings/${ratingId}`, { headers })
+        this.http.delete(`${environment.apiBaseUrl}/ratings/${ratingId}`)
           .subscribe({
             next: () => {
               Swal.fire({
@@ -169,7 +163,7 @@ export class TriviaRatingsComponent implements OnInit {
   }
 
   getCurrentPlayerId(): number {
-    return Number(localStorage.getItem('playerId') || '0');
+    return Number(this.authService.getPlayerId() || '0');
   }
 }
 

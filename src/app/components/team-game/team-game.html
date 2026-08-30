@@ -1,0 +1,157 @@
+<div class="team-game" *ngIf="state">
+  <header class="top-bar" *ngIf="!isHost || state.status !== 'LOBBY'">
+    <div>
+      <h1>Sala {{ state.code }}</h1>
+      <p>{{ state.triviaTitle }} · {{ state.mode }} · Ronda {{ state.currentRound }}</p>
+    </div>
+    <div class="score-box">
+      <span>Equipo: {{ state.teamScore }} / {{ state.targetScore }}</span>
+      <button (click)="leaveRoom()">Salir</button>
+    </div>
+  </header>
+
+  <!-- Lobby del anfitrión (pantalla de proyección) -->
+  <section *ngIf="state.status === 'LOBBY' && isHost" class="host-lobby">
+    <p class="host-label">Pantalla del anfitrión</p>
+    <h1 class="host-title">{{ state.triviaTitle }}</h1>
+    <p class="host-subtitle">{{ state.mode === 'TEAM' ? 'Modo Among Us' : 'Modo grupal' }} · Meta {{ state.targetScore }} pts</p>
+
+    <div class="code-display">
+      <span class="code-label">Código de la sala</span>
+      <div class="code-value">{{ state.code }}</div>
+      <button class="copy-btn" (click)="copyCode()">Copiar código</button>
+    </div>
+
+    <div class="waiting-box">
+      <h2>Jugadores conectados ({{ state.players.length }}/{{ state.maxPlayers }})</h2>
+      <p class="waiting-hint">Comparte el código para que se unan desde sus celulares.</p>
+
+      <ul class="player-list" *ngIf="state.players.length; else emptyPlayers">
+        <li *ngFor="let p of state.players" class="player-row">
+          <span class="player-dot"></span>
+          {{ p.username }}
+        </li>
+      </ul>
+      <ng-template #emptyPlayers>
+        <p class="empty-players">Aún no hay jugadores. Esperando conexiones...</p>
+      </ng-template>
+    </div>
+
+    <button
+      class="start-btn host-start"
+      (click)="startGame()"
+      [disabled]="state.players.length < 2">
+      Iniciar partida
+    </button>
+    <p class="min-players-note" *ngIf="state.players.length < 2">
+      Necesitas al menos 2 jugadores para empezar.
+    </p>
+  </section>
+
+  <!-- Lobby de jugadores (no anfitrión) -->
+  <section *ngIf="state.status === 'LOBBY' && !isHost" class="lobby-panel">
+    <div class="code-display compact">
+      <span class="code-label">Estás en la sala</span>
+      <div class="code-value small">{{ state.code }}</div>
+    </div>
+    <h2>Esperando al anfitrión ({{ state.players.length }}/{{ state.maxPlayers }})</h2>
+    <ul class="player-list">
+      <li *ngFor="let p of state.players" class="player-row">
+        <span class="player-dot"></span>
+        {{ p.username }}
+      </li>
+    </ul>
+    <p class="waiting-host">El anfitrión iniciará la partida cuando estén listos.</p>
+  </section>
+
+  <!-- Anfitrión durante la partida (solo proyección) -->
+  <section *ngIf="isHost && state.status !== 'LOBBY' && state.status !== 'FINISHED'" class="host-spectator">
+    <div class="spectator-header">
+      <div class="code-display compact inline">
+        <span class="code-label">Sala</span>
+        <div class="code-value small">{{ state.code }}</div>
+      </div>
+      <div class="spectator-stats">
+        <span>Ronda {{ state.currentRound }}</span>
+        <span>Puntos {{ state.teamScore }} / {{ state.targetScore }}</span>
+        <span *ngIf="state.status === 'VOTING'">Votación en curso</span>
+      </div>
+    </div>
+
+    <div class="players-strip large">
+      <div *ngFor="let p of state.players" class="player-chip" [class.dead]="!p.alive">
+        <strong>{{ p.username }}</strong>
+        <span>{{ p.score }} pts</span>
+        <span *ngIf="p.answeredThisRound && state.status === 'PLAYING'" class="answered-badge">Respondió</span>
+        <span *ngIf="!p.alive" class="dead-badge">Expulsado</span>
+      </div>
+    </div>
+
+    <p class="spectator-note">Proyecta esta pantalla en el salón. Los jugadores responden desde sus dispositivos.</p>
+  </section>
+
+  <!-- Jugadores durante la partida -->
+  <section *ngIf="!isHost && state.status === 'PLAYING'" class="play-panel">
+    <div class="players-strip">
+      <div *ngFor="let p of state.players" class="player-chip" [class.dead]="!p.alive">
+        {{ p.username }} · {{ p.score }} pts
+        <span *ngIf="p.answeredThisRound">✓</span>
+      </div>
+    </div>
+
+    <div *ngIf="isTraitor" class="traitor-toolbar">
+      <button [class.active]="traitorPanelOpen" (click)="traitorPanelOpen = true; toggleTraitorUi(true)">Panel de trampas</button>
+      <button [class.active]="!traitorPanelOpen" (click)="traitorPanelOpen = false; toggleTraitorUi(false)">Modo tripulante</button>
+      <span>{{ state.tricksRemaining }} trampas restantes</span>
+    </div>
+
+    <div *ngIf="isTraitor && traitorPanelOpen && state.canApplyTrick" class="trick-panel">
+      <h3>Sabotear jugador</h3>
+      <div *ngFor="let target of trickTargets" class="trick-target">
+        <strong>{{ target.username }}</strong>
+        <div class="trick-buttons">
+          <button (click)="applyTrick(target.playerId, 'REDUCE_TIME')">Tiempo</button>
+          <button (click)="applyTrick(target.playerId, 'UPSIDE_DOWN')">Invertido</button>
+          <button (click)="applyTrick(target.playerId, 'REVERSE_TEXT')">Espejo</button>
+          <button (click)="applyTrick(target.playerId, 'SHUFFLE_WORDS')">Mezclar</button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="myQuestion && (!isTraitor || !traitorPanelOpen)" class="question-panel">
+      <div class="timer">{{ questionTime }}s</div>
+      <h2 [ngClass]="getDisplayClass()">{{ myQuestion.displayText }}</h2>
+      <p *ngIf="myQuestion.trickMessage" class="trick-msg">{{ myQuestion.trickMessage }}</p>
+      <div class="options">
+        <button *ngFor="let opt of myQuestion.options"
+                [class.selected]="selectedAnswer === opt.index"
+                (click)="selectedAnswer = opt.index">
+          {{ opt.text }}
+        </button>
+      </div>
+      <button class="confirm" (click)="submitAnswer()">Confirmar</button>
+    </div>
+
+    <div *ngIf="isTraitor && traitorPanelOpen && myQuestion" class="fake-question-panel">
+      <p>Modo camuflaje: misma UI de respuestas para no levantar sospechas.</p>
+      <div class="options">
+        <button *ngFor="let opt of myQuestion.options">{{ opt.text }}</button>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="!isHost && state.status === 'VOTING'" class="vote-panel">
+    <h2>Votación de expulsión</h2>
+    <button *ngFor="let tally of state.voteTally" (click)="vote(tally.targetPlayerId)">
+      {{ tally.username }} ({{ tally.votes }} votos)
+    </button>
+  </section>
+
+  <section *ngIf="state.status === 'FINISHED'" class="finish-panel">
+    <h2>{{ state.winnerMessage }}</h2>
+    <ul class="final-scores" *ngIf="state.players.length">
+      <li *ngFor="let p of state.players">{{ p.username }} — {{ p.score }} pts</li>
+    </ul>
+    <button (click)="leaveRoom()">Volver al inicio</button>
+  </section>
+</div>

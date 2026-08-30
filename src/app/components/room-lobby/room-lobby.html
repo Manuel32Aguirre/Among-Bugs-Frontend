@@ -1,0 +1,64 @@
+<div class="lobby-page">
+  <div class="lobby-header">
+    <h1>Salas multijugador</h1>
+    <p>Crea una sala para jugar en el salón o únete con un código.</p>
+  </div>
+
+  <div class="cards">
+    <section class="card-panel">
+      <div class="panel-badge team" *ngIf="mode === 'TEAM'">Modo Among Us</div>
+      <div class="panel-badge solo" *ngIf="mode === 'SOLO'">Modo grupal</div>
+
+      <h2>Crear sala</h2>
+
+      <label for="mode">Modo de juego</label>
+      <select id="mode" [(ngModel)]="mode">
+        <option value="TEAM">Equipos — hay un traidor</option>
+        <option value="SOLO">Individual en grupo</option>
+      </select>
+
+      <label for="trivia">Trivia</label>
+      <select id="trivia" [(ngModel)]="triviaId" [disabled]="loadingTrivias || !hasTrivias">
+        <option [ngValue]="null" disabled>Selecciona una trivia</option>
+
+        <optgroup label="Mis trivias" *ngIf="myTrivias.length">
+          <option *ngFor="let t of myTrivias" [ngValue]="t.id">
+            {{ t.title }} · {{ t.totalQuestions }} preguntas
+          </option>
+        </optgroup>
+
+        <optgroup label="Trivias públicas" *ngIf="publicTrivias.length">
+          <option *ngFor="let t of publicTrivias" [ngValue]="t.id">
+            {{ t.title }} · {{ t.totalQuestions }} preguntas · {{ t.creatorUsername }}
+          </option>
+        </optgroup>
+      </select>
+
+      <p class="hint" *ngIf="loadingTrivias">Cargando trivias...</p>
+      <p class="hint warning" *ngIf="!loadingTrivias && !hasTrivias">
+        No hay trivias disponibles. Crea una desde el inicio primero.
+      </p>
+
+      <label for="target">Meta de puntos del equipo</label>
+      <input id="target" type="number" [(ngModel)]="targetScore" min="1" max="100">
+
+      <label for="maxPlayers">Máximo de jugadores</label>
+      <input id="maxPlayers" type="number" [(ngModel)]="maxPlayers" min="2" max="30">
+
+      <button class="btn btn-primary" (click)="createRoom()" [disabled]="!triviaId || loadingTrivias">
+        Crear sala
+      </button>
+    </section>
+
+    <section class="card-panel join-panel">
+      <h2>Unirse a sala</h2>
+      <p class="join-help">Pide el código de 6 letras al anfitrión.</p>
+
+      <label for="code">Código</label>
+      <input id="code" [(ngModel)]="joinCode" placeholder="ABC123" maxlength="6" class="code-input">
+
+      <button class="btn btn-outline-info" (click)="joinRoom()">Entrar a la sala</button>
+      <a routerLink="/home" class="back-link">← Volver al inicio</a>
+    </section>
+  </div>
+</div>

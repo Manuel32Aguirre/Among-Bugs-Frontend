@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface RankingResponse {
   attemptId: number;
@@ -27,17 +28,15 @@ export class RankingsComponent implements OnInit {
   rankings: RankingResponse[] = [];
   loading = false;
   error = '';
-  private baseUrl = 'https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api';
+  private baseUrl = environment.apiBaseUrl;
 
   ngOnInit(): void {
     this.loadRankings();
   }
 
   private getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
     return new HttpHeaders({
-      'Accept-Language': 'es-MX',
-      'Authorization': `Bearer ${token}`
+      'Accept-Language': 'es-MX'
     });
   }
 

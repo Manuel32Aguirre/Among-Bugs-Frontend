@@ -1,155 +1,52 @@
 <div class="play-trivia-container">
-  <!-- Pantalla de carga -->
   <div *ngIf="loading" class="loading-screen">
     <div class="spinner"></div>
-    <p>Cargando trivia...</p>
+    <p>Iniciando sesión segura...</p>
   </div>
 
-  <!-- Juego iniciado -->
-  <div *ngIf="gameStarted && !gameFinished && trivia" class="game-screen">
-    <!-- Header con timer y progreso -->
+  <div *ngIf="gameStarted && !gameFinished && currentQuestion" class="game-screen">
     <div class="game-header">
-      <div class="header-left">
-        <button class="btn btn-danger" (click)="exitGame()">
-          <i class="bi bi-x-circle"></i> Salir
-        </button>
-      </div>
-      <div class="header-center">
-        <div class="timer-display">
-          <i class="bi bi-clock"></i> {{ formatTime(totalTime) }}
-        </div>
-      </div>
-      <div class="header-right">
-        <div class="progress-info">
-          <span class="current-question">{{ currentQuestionIndex + 1 }}</span>
-          <span class="separator">/</span>
-          <span class="total-questions">{{ trivia.questions.length }}</span>
-        </div>
+      <button class="btn btn-danger" (click)="exitGame()">Salir</button>
+      <div class="timer-display">{{ formatTime(totalTime) }}</div>
+      <div class="progress-info">
+        {{ currentQuestion.questionNumber }} / {{ currentQuestion.totalQuestions }}
       </div>
     </div>
 
-    <!-- Barra de progreso -->
-    <div class="progress-bar-container">
-      <div class="progress-bar"
-           [style.width.%]="((currentQuestionIndex + 1) / trivia.questions.length) * 100">
-      </div>
-    </div>
-
-    <!-- Timer de la pregunta actual -->
     <div class="question-timer">
       <div class="timer-circle" [class.warning]="questionTime <= 5">
-        <span class="timer-value">{{ questionTime }}</span>
+        <span>{{ questionTime }}</span>
       </div>
     </div>
 
-    <!-- Stats rápidas -->
     <div class="quick-stats">
-      <div class="stat-item correct">
-        <i class="bi bi-check-circle-fill"></i>
-        <span>{{ correctAnswers }} correctas</span>
-      </div>
-      <div class="stat-item remaining">
-        <i class="bi bi-list-check"></i>
-        <span>{{ trivia.questions.length - currentQuestionIndex - 1 }} restantes</span>
-      </div>
+      <span>{{ correctAnswers }} correctas</span>
     </div>
 
-    <!-- Pregunta actual -->
-    <div class="question-container" *ngIf="getCurrentQuestion() as question">
+    <div class="question-container">
       <div class="question-card">
-        <h2 class="question-text"
-            [class.upside-down]="question.trickType === 'UPSIDE_DOWN'"
-            [class.reversed]="question.trickType === 'REVERSE_TEXT'">
-          {{ getQuestionTextDisplay(question) }}
-        </h2>
-
-        <div class="trick-indicator" *ngIf="question.trickType">
-          <i class="bi bi-exclamation-triangle-fill"></i>
-          <span>Trampa activa</span>
-        </div>
+        <h2 class="question-text" [ngClass]="getDisplayClass()">{{ getQuestionTextDisplay() }}</h2>
+        <div class="trick-indicator" *ngIf="currentQuestion.trickType">Trampa activa (servidor)</div>
       </div>
 
-      <!-- Opciones de respuesta estilo Kahoot -->
       <div class="answers-grid">
-        <div *ngFor="let option of question.options; let i = index"
+        <div *ngFor="let option of currentQuestion.options"
              class="answer-option"
-             [class.selected]="selectedAnswer === i"
-             [class.option-0]="i === 0"
-             [class.option-1]="i === 1"
-             [class.option-2]="i === 2"
-             [class.option-3]="i === 3"
-             (click)="selectAnswer(i)">
-          <div class="option-icon">
-            <i *ngIf="i === 0" class="bi bi-triangle-fill"></i>
-            <i *ngIf="i === 1" class="bi bi-diamond-fill"></i>
-            <i *ngIf="i === 2" class="bi bi-circle-fill"></i>
-            <i *ngIf="i === 3" class="bi bi-square-fill"></i>
-          </div>
+             [class.selected]="selectedAnswer === option.index"
+             (click)="selectAnswer(option.index)">
           <div class="option-text">{{ option.text }}</div>
         </div>
       </div>
 
-      <!-- Botón de enviar respuesta -->
-      <div class="submit-button-container">
-        <button class="submit-button"
-                [disabled]="selectedAnswer === null"
-                (click)="submitAnswer()">
-          Confirmar respuesta
-        </button>
-      </div>
+      <button class="submit-button" [disabled]="selectedAnswer === null" (click)="submitAnswer()">
+        Confirmar respuesta
+      </button>
     </div>
   </div>
 
-  <!-- Pantalla de resultados finales -->
-  <div *ngIf="gameFinished && trivia" class="results-screen">
-    <div class="results-container">
-      <div class="results-header">
-        <img src="fin.png"/>
-        <h1>¡Trivia Completada!</h1>
-      </div>
-
-      <div class="results-stats">
-        <div class="stat-card">
-          <div class="stat-icon correct">
-            <i class="bi bi-check-circle-fill"></i>
-          </div>
-          <div class="stat-value">{{ correctAnswers }}</div>
-          <div class="stat-label">Correctas</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon total">
-            <i class="bi bi-list-check"></i>
-          </div>
-          <div class="stat-value">{{ trivia.questions.length }}</div>
-          <div class="stat-label">Total</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon time">
-            <i class="bi bi-clock"></i>
-          </div>
-          <div class="stat-value">{{ formatTime(totalTime) }}</div>
-          <div class="stat-label">Tiempo</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon percentage">
-            <i class="bi bi-graph-up"></i>
-          </div>
-          <div class="stat-value">{{ ((correctAnswers / trivia.questions.length) * 100).toFixed(1) }}%</div>
-          <div class="stat-label">Aciertos</div>
-        </div>
-      </div>
-
-      <div class="results-actions">
-        <button class="action-btn secondary" (click)="navigateToRankings()">
-          Ver Rankings
-        </button>
-        <button class="action-btn tertiary" (click)="navigateToHome()">
-          Volver al Inicio
-        </button>
-      </div>
-    </div>
+  <div *ngIf="gameFinished" class="results-screen">
+    <h1>¡Partida terminada!</h1>
+    <p>{{ correctAnswers }} / {{ totalQuestions }} correctas</p>
+    <button (click)="navigateToHome()">Volver al inicio</button>
   </div>
 </div>

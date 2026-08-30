@@ -28,10 +28,17 @@ bazel-out
 /bazel-testlogs
 /ibazel_profiler_pb
 
-# --- Entornos Locales (Opcional pero recomendado) ---
-# Si usas variables de entorno locales que no deben subir
-src/environments/environment.local.ts
+# --- Entornos (SOLO .env + archivo generado) ---
+src/environments/environment.ts
+!src/environments/environment.example.ts
 .env
+.env.local
+.env.*.local
+!.env.example
+
+# --- Documentacion (no subir al repo remoto) ---
+*.md
+README.md
 
 # --- Tests ---
 # Reportes de cobertura de código

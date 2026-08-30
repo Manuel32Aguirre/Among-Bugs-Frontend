@@ -1,98 +1,91 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  //Prueba, variable hardcodeada
-  private baseUrl = 'https://among-bugs-backend-a4ececdtf8dqceha.westus3-01.azurewebsites.net/api';
+  private baseUrl = environment.apiBaseUrl;
 
+  private tokenSubject = new BehaviorSubject<string | null>(null);
+  private playerIdSubject = new BehaviorSubject<string | null>(null);
+  private initialized = false;
 
-
-  // Header para recibir mensajes en español
-  private getHeaders() {
-    return new HttpHeaders({
-      'Accept-Language': 'es-MX'
-    });
-  }
-
-  // Header con Token para endpoints protegidos
-  private getAuthHeaders() {
-    const token = this.getToken();
-    return new HttpHeaders({
-      'Accept-Language': 'es-MX',
-      'Authorization': `Bearer ${token}`
-    });
-  }
-
-  // 1. Registro de nuevo tripulante
   register(userData: any) {
-    return this.http.post(`${this.baseUrl}/auth/register`, userData, { headers: this.getHeaders() });
+    return this.http.post(`${this.baseUrl}/auth/register`, userData);
   }
 
-  // 2. Verificación de correo
   verifyEmail(token: string) {
-    return this.http.get(`${this.baseUrl}/auth/verify?token=${token}`, { headers: this.getHeaders() });
+    return this.http.get(`${this.baseUrl}/auth/verify?token=${token}`);
   }
 
-  // 3. Inicio de sesión
-  login(credentials: any) {
-    return this.http.post(`${this.baseUrl}/auth/login`, credentials, { headers: this.getHeaders() });
+  login(credentials: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/auth/login`, credentials).pipe(
+      tap((res: any) => this.saveToken(res.token))
+    );
   }
 
-  // 4. Obtener perfil del jugador (Para tu Dashboard/Home)
+  restoreSession(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/auth/me`).pipe(
+      tap((profile: any) => {
+        this.initialized = true;
+        if (profile?.id) {
+          this.playerIdSubject.next(String(profile.id));
+        }
+      })
+    );
+  }
+
   getProfile() {
-    return this.http.get(`${this.baseUrl}/player`, { headers: this.getAuthHeaders() });
-  }
-
-  // --- Gestión del Token JWT ---
-  saveToken(token: string) {
-    localStorage.setItem('authToken', token);
-
-    // Decodificar el JWT para extraer el playerId
-    try {
-      const payload = this.decodeJWT(token);
-      if (payload && payload.sub) {
-        localStorage.setItem('playerId', payload.sub);
-      }
-    } catch (error) {
-      console.error('Error al decodificar el token:', error);
-    }
-  }
-
-  getToken() {
-    return localStorage.getItem('authToken');
-  }
-
-  getPlayerId(): string | null {
-    return localStorage.getItem('playerId');
+    return this.http.get(`${this.baseUrl}/player`);
   }
 
   logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('playerId');
+    this.http.post(`${this.baseUrl}/auth/logout`, {}).subscribe({
+      complete: () => this.clearSession()
+    });
+    this.clearSession();
   }
 
-  // Verifica si hay una sesión activa
+  saveToken(token: string) {
+    this.tokenSubject.next(token);
+    sessionStorage.setItem('authToken', token);
+    const payload = this.decodeJWT(token);
+    if (payload?.sub) {
+      this.playerIdSubject.next(payload.sub);
+      sessionStorage.setItem('playerId', payload.sub);
+    }
+  }
+
+  getToken(): string | null {
+    return this.tokenSubject.value ?? sessionStorage.getItem('authToken');
+  }
+
+  getPlayerId(): string | null {
+    return this.playerIdSubject.value ?? sessionStorage.getItem('playerId');
+  }
+
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
 
-  // Método para decodificar JWT (sin verificar firma, solo para leer datos)
+  clearSession() {
+    this.tokenSubject.next(null);
+    this.playerIdSubject.next(null);
+    sessionStorage.removeItem('authToken');
+    sessionStorage.removeItem('playerId');
+  }
+
   private decodeJWT(token: string): any {
     try {
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
+      const jsonPayload = decodeURIComponent(
+        atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+      );
       return JSON.parse(jsonPayload);
-    } catch (error) {
-      console.error('Error al decodificar JWT:', error);
+    } catch {
       return null;
     }
   }

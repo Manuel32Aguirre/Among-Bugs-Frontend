@@ -1,17 +1,11 @@
-version: '3.8'
-
 services:
   frontend:
     build: .
-    
     container_name: among-bugs-frontend
-    
     ports:
       - "4200:4200"
-    
+    env_file:
+      - .env
     volumes:
       - .:/app
       - /app/node_modules
-
-    environment:
-      - CHOKIDAR_USEPOLLING=true

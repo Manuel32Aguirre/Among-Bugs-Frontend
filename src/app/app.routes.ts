@@ -10,6 +10,8 @@ import { EditTriviaComponent } from './components/edit-trivia/edit-trivia';
 import { MyTriviasComponent } from './components/my-trivias/my-trivias';
 import { RankingsComponent } from './components/rankings/rankings';
 import { PlayTriviaComponent } from './components/play-trivia/play-trivia';
+import { RoomLobbyComponent } from './components/room-lobby/room-lobby';
+import { TeamGameComponent } from './components/team-game/team-game';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -45,6 +47,10 @@ export const routes: Routes = [
   // 9. Ruta para jugar trivia (protegida)
   { path: 'play-trivia/:id', component: PlayTriviaComponent, canActivate: [authGuard] },
 
-  // 10. Ruta catch-all: cualquier ruta no definida redirije al login
+  // 10. Salas multijugador
+  { path: 'rooms', component: RoomLobbyComponent, canActivate: [authGuard] },
+  { path: 'room/:code', component: TeamGameComponent, canActivate: [authGuard] },
+
+  // 11. Ruta catch-all: cualquier ruta no definida redirije al login
   { path: '**', redirectTo: '/login' }
 ];

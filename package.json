@@ -6,7 +6,11 @@
   },
   "scripts": {
     "ng": "ng",
+    "env:dev": "node scripts/generate-env.mjs",
+    "env:prod": "node scripts/generate-env.mjs --production",
+    "prestart": "npm run env:dev",
     "start": "ng serve --host 0.0.0.0",
+    "prebuild": "npm run env:prod",
     "build": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
