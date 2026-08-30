@@ -87,6 +87,16 @@
       </div>
     </div>
 
+    <div *ngIf="projectionQuestion" class="projection-question">
+      <div class="timer">{{ projectionTime }}s</div>
+      <p class="round-label">Pregunta de la ronda {{ state.currentRound }}</p>
+      <h2 [ngClass]="getProjectionClass()">{{ projectionQuestion.displayText }}</h2>
+      <p *ngIf="projectionQuestion.trickMessage" class="trick-msg">{{ projectionQuestion.trickMessage }}</p>
+      <ul class="projection-options">
+        <li *ngFor="let opt of projectionQuestion.options">{{ opt.text }}</li>
+      </ul>
+    </div>
+
     <p class="spectator-note">Proyecta esta pantalla en el salón. Los jugadores responden desde sus dispositivos.</p>
   </section>
 
@@ -102,10 +112,10 @@
     <div *ngIf="isTraitor" class="traitor-toolbar">
       <button [class.active]="traitorPanelOpen" (click)="traitorPanelOpen = true; toggleTraitorUi(true)">Panel de trampas</button>
       <button [class.active]="!traitorPanelOpen" (click)="traitorPanelOpen = false; toggleTraitorUi(false)">Modo tripulante</button>
-      <span>{{ state.tricksRemaining }} trampas restantes</span>
+      <span>{{ tricksRemaining }} trampas restantes</span>
     </div>
 
-    <div *ngIf="isTraitor && traitorPanelOpen && state.canApplyTrick" class="trick-panel">
+    <div *ngIf="isTraitor && traitorPanelOpen && canApplyTrick" class="trick-panel">
       <h3>Sabotear jugador</h3>
       <div *ngFor="let target of trickTargets" class="trick-target">
         <strong>{{ target.username }}</strong>
@@ -116,6 +126,10 @@
           <button (click)="applyTrick(target.playerId, 'SHUFFLE_WORDS')">Mezclar</button>
         </div>
       </div>
+    </div>
+
+    <div *ngIf="!myQuestion && !isTraitor" class="waiting-question">
+      <p>Esperando tu pregunta...</p>
     </div>
 
     <div *ngIf="myQuestion && (!isTraitor || !traitorPanelOpen)" class="question-panel">

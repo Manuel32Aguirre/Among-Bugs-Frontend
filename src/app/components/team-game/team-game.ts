@@ -23,8 +23,10 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   code = '';
   state: any = null;
   myQuestion: any = null;
+  projectionQuestion: any = null;
   selectedAnswer: number | null = null;
   questionTime = 0;
+  projectionTime = 0;
   traitorPanelOpen = true;
   trickTargets: any[] = [];
   private timerSub?: Subscription;
@@ -40,7 +42,12 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.roomService.connect(this.code, playerId, {
       onRoomUpdate: (state) => {
         this.state = state;
-        if (state.myQuestion) this.myQuestion = state.myQuestion;
+        if (state.myQuestion) {
+          this.myQuestion = state.myQuestion;
+        }
+        if (state.projectionQuestion) {
+          this.projectionQuestion = state.projectionQuestion;
+        }
         this.trickTargets = (state.players || []).filter((p: any) => p.alive && p.playerId !== Number(playerId));
         this.syncTimer();
         this.cdr.detectChanges();
@@ -65,6 +72,8 @@ export class TeamGameComponent implements OnInit, OnDestroy {
       next: (state) => {
         this.state = state;
         this.myQuestion = state.myQuestion;
+        this.projectionQuestion = state.projectionQuestion;
+        this.syncTimer();
         this.cdr.detectChanges();
       },
       error: () => this.router.navigate(['/rooms'])
@@ -82,8 +91,19 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   }
 
   get isHost() {
-    return this.state?.viewerIsHost === true
-      || this.state?.hostPlayerId === Number(this.auth.getPlayerId());
+    const playerId = Number(this.auth.getPlayerId());
+    return this.state?.hostPlayerId != null && this.state.hostPlayerId === playerId;
+  }
+
+  get canApplyTrick() {
+    return this.isTraitor
+      && this.myRole?.alive
+      && this.state?.status === 'PLAYING'
+      && (this.myRole?.tricksUsedThisRound ?? 0) < 3;
+  }
+
+  get tricksRemaining() {
+    return Math.max(0, 3 - (this.myRole?.tricksUsedThisRound ?? 0));
   }
 
   get isTraitor() {
@@ -138,13 +158,30 @@ export class TeamGameComponent implements OnInit, OnDestroy {
 
   syncTimer(): void {
     this.timerSub?.unsubscribe();
-    if (!this.myQuestion) return;
+
     const tick = () => {
-      this.questionTime = Math.max(0, Math.ceil((this.myQuestion.questionDeadlineMs - Date.now()) / 1000));
+      if (this.myQuestion) {
+        this.questionTime = Math.max(0, Math.ceil((this.myQuestion.questionDeadlineMs - Date.now()) / 1000));
+      }
+      if (this.projectionQuestion) {
+        this.projectionTime = Math.max(0, Math.ceil((this.projectionQuestion.questionDeadlineMs - Date.now()) / 1000));
+      }
       this.cdr.markForCheck();
     };
+
+    if (!this.myQuestion && !this.projectionQuestion) {
+      return;
+    }
+
     tick();
     this.timerSub = interval(250).subscribe(tick);
+  }
+
+  getProjectionClass(): string {
+    const style = this.projectionQuestion?.displayStyle ?? 'NORMAL';
+    if (style === 'UPSIDE_DOWN') return 'upside-down';
+    if (style === 'REVERSED') return 'reversed';
+    return '';
   }
 
   getDisplayClass(): string {
