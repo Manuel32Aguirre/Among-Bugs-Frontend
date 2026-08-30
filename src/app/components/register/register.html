@@ -1,6 +1,8 @@
-<div class="login-container">
-  <div class="login-card">
+<div class="auth-world">
+  <div class="auth-card">
+    <div class="logo-glow">AB</div>
     <h2>Among Bugs</h2>
+    <p class="subtitle">Únete a la tripulación</p>
 
     <form (ngSubmit)="onRegister()">
       <div class="form-group">
@@ -15,14 +17,19 @@
 
       <div class="form-group">
         <label>CONTRASEÑA</label>
-        <input type="password" name="password" [(ngModel)]="registerData.password" required>
+        <div class="password-wrap">
+          <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="registerData.password" required>
+          <button type="button" class="toggle-pass" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Ocultar' : 'Mostrar'">
+            <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+          </button>
+        </div>
       </div>
 
-      <button type="submit">Crear Cuenta</button>
+      <button type="submit" class="submit">Crear cuenta</button>
     </form>
 
     <p class="footer-text">
-      ¿Ya tienes cuenta? <a routerLink="/login">Inicia Sesión</a>
+      ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
     </p>
   </div>
 </div>

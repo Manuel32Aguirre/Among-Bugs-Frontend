@@ -1,0 +1,53 @@
+<section class="create-world">
+  <a routerLink="/home" class="back">← Salas</a>
+  <header>
+    <h1>Crear misión</h1>
+    <p>Diseña las preguntas (o deja que Groq lo haga). Tú serás el anfitrión y no juegas.</p>
+  </header>
+
+  <div class="mode-switch">
+    <button type="button" [class.active]="mode === 'ai'" (click)="setMode('ai')">Con IA (Groq)</button>
+    <button type="button" [class.active]="mode === 'manual'" (click)="setMode('manual')">Personalizada</button>
+  </div>
+
+  <label class="field">
+    Meta de puntos del equipo
+    <input type="number" [(ngModel)]="targetScore" min="1" max="100">
+  </label>
+
+  <div class="panel" *ngIf="mode === 'ai'">
+    <label class="field">
+      Prompt
+      <textarea [(ngModel)]="aiPrompt" rows="4" placeholder="Ej. Preguntas de ciberseguridad para principiantes"></textarea>
+    </label>
+    <label class="field">
+      Número de preguntas
+      <input type="number" [(ngModel)]="aiCount" min="3" max="20">
+    </label>
+  </div>
+
+  <div class="panel" *ngIf="mode === 'manual'">
+    <label class="field">Título <input [(ngModel)]="trivia.title" maxlength="50"></label>
+    <label class="field">Descripción <textarea [(ngModel)]="trivia.description" rows="2" maxlength="200"></textarea></label>
+
+    <div class="q-card" *ngFor="let q of trivia.questions; let i = index">
+      <div class="q-head">
+        <strong>Pregunta {{ i + 1 }}</strong>
+        <button type="button" class="danger" (click)="removeQuestion(i)">Quitar</button>
+      </div>
+      <input [(ngModel)]="q.questionText" placeholder="Texto de la pregunta">
+      <div class="opts">
+        <div class="opt" *ngFor="let opt of q.options; let j = index">
+          <input type="radio" [name]="'c'+i" [checked]="opt.isCorrect" (change)="markCorrect(i, j)">
+          <input [(ngModel)]="opt.text" placeholder="Opción">
+        </div>
+      </div>
+      <button type="button" class="linkish" (click)="addOption(i)">+ Opción</button>
+    </div>
+    <button type="button" class="btn-secondary" (click)="addQuestion()">+ Pregunta</button>
+  </div>
+
+  <button type="button" class="btn-glow wide" (click)="create()" [disabled]="submitting">
+    {{ submitting ? 'Creando…' : 'Crear sala y entrar' }}
+  </button>
+</section>

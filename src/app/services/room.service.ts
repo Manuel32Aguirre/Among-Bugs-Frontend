@@ -13,7 +13,15 @@ export class RoomService {
   private baseUrl = `${environment.apiBaseUrl}/rooms`;
   private client?: Client;
 
-  createRoom(payload: { triviaId: number; mode: 'SOLO' | 'TEAM'; targetScore: number }) {
+  listOpenRooms() {
+    return this.http.get<any[]>(this.baseUrl);
+  }
+
+  createRoom(payload: {
+    targetScore: number;
+    trivia?: any;
+    generate?: { prompt: string; questionCount: number; isPublic: boolean };
+  }) {
     return this.http.post<any>(this.baseUrl, payload);
   }
 
@@ -29,6 +37,10 @@ export class RoomService {
     return this.http.post<any>(`${this.baseUrl}/${code}/start`, {});
   }
 
+  beginPlaying(code: string) {
+    return this.http.post<any>(`${this.baseUrl}/${code}/begin-playing`, {});
+  }
+
   answer(code: string, optionIndex: number) {
     return this.http.post<any>(`${this.baseUrl}/${code}/answer`, { optionIndex });
   }
@@ -37,12 +49,15 @@ export class RoomService {
     return this.http.post<any>(`${this.baseUrl}/${code}/trick`, { trickType });
   }
 
-  toggleTraitorUi(code: string, traitorUiMode: boolean) {
-    return this.http.post<any>(`${this.baseUrl}/${code}/traitor-ui`, { traitorUiMode });
+  vote(code: string, targetPlayerId: number | null, skip = false) {
+    return this.http.post<any>(`${this.baseUrl}/${code}/vote`, {
+      targetPlayerId,
+      skip
+    });
   }
 
-  vote(code: string, targetPlayerId: number) {
-    return this.http.post<any>(`${this.baseUrl}/${code}/vote`, { targetPlayerId });
+  ackEjection(code: string) {
+    return this.http.post<any>(`${this.baseUrl}/${code}/ack-ejection`, {});
   }
 
   connect(roomCode: string, playerId: string, handlers: {

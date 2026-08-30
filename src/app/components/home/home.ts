@@ -1,106 +1,59 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth';
-import { TriviaService } from '../../services/trivia';
 import { Router, RouterLink } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
-import { TriviaRatingsComponent } from '../trivia-ratings/trivia-ratings';
+import { RoomService } from '../../services/room.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, TriviaRatingsComponent],
+  imports: [CommonModule, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  private authService = inject(AuthService);
-  private triviaService = inject(TriviaService);
+  private roomService = inject(RoomService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
-  user = signal<any>(null);
-  publicTrivias = signal<any[]>([]);
-  myTrivias = signal<any[]>([]);
+  rooms: any[] = [];
+  loading = true;
+  joiningCode: string | null = null;
+  private poll?: Subscription;
 
-  private pollSubscription?: Subscription;
-
-  selectedTriviaId: number | null = null;
-  showRatingsModal: boolean = false;
-
-  ngOnInit() {
-    const token = this.authService.getToken();
-    if (!token) {
-      this.router.navigate(['/login']);
-      return;
-    }
-
-    this.cargarDatosIniciales();
-
-    // Polling cada 5 segundos para actualizar trivias públicas
-    this.pollSubscription = interval(5000).subscribe(() => {
-      this.cargarPublicTrivias();
-    });
+  ngOnInit(): void {
+    this.refresh();
+    this.poll = interval(4000).subscribe(() => this.refresh(false));
   }
 
   ngOnDestroy(): void {
-    if (this.pollSubscription) {
-      this.pollSubscription.unsubscribe();
-    }
+    this.poll?.unsubscribe();
   }
 
-  cargarDatosIniciales() {
-    this.authService.getProfile().subscribe({
-      next: (data) => this.user.set(data),
-      error: () => this.logout()
-    });
-
-    this.cargarPublicTrivias();
-
-    this.triviaService.getMyTrivias().subscribe({
-      next: (data: any) => this.myTrivias.set(Array.from(data)),
-      error: (err: any) => console.error("Error al cargar trivias:", err)
-    });
-  }
-
-  cargarPublicTrivias() {
-    this.triviaService.getPublicTrivias().subscribe({
-      next: (data: any) => this.publicTrivias.set(Array.from(data)),
-      error: (err: any) => console.error("Error al cargar trivias públicas:", err)
+  refresh(showLoader = true): void {
+    if (showLoader) this.loading = true;
+    this.roomService.listOpenRooms().subscribe({
+      next: (rooms) => {
+        this.rooms = rooms || [];
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  playTrivia(triviaId: number) {
-    // Navegar al componente de juego
-    this.router.navigate(['/play-trivia', triviaId]);
-  }
-
-  viewRankings(triviaId: number) {
-    // Navegar a la página de rankings globales
-    this.router.navigate(['/rankings']);
-  }
-
-  viewRatings(triviaId: number, event: Event): void {
-    event.stopPropagation();
-    this.selectedTriviaId = triviaId;
-    this.showRatingsModal = true;
-  }
-
-  closeRatingsModal(): void {
-    this.showRatingsModal = false;
-    this.selectedTriviaId = null;
-  }
-
-  editTrivia(triviaId: number): void {
-    this.router.navigate(['/edit-trivia', triviaId]);
-  }
-
-  goToMyTrivias() {
-    this.router.navigate(['/my-trivias']);
-  }
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  join(code: string): void {
+    this.joiningCode = code;
+    this.roomService.joinRoom(code).subscribe({
+      next: (state) => this.router.navigate(['/room', state.code]),
+      error: (err) => {
+        this.joiningCode = null;
+        Swal.fire('No se pudo unir', err.error?.message || 'Sala no disponible', 'error');
+      }
+    });
   }
 }

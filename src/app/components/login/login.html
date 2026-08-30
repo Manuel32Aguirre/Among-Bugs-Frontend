@@ -1,6 +1,8 @@
-<div class="login-container">
-  <div class="login-card">
+<div class="auth-world">
+  <div class="auth-card">
+    <div class="logo-glow">AB</div>
     <h2>Among Bugs</h2>
+    <p class="subtitle">Inicia sesión para jugar</p>
 
     <form (ngSubmit)="onLogin()">
       <div class="form-group">
@@ -10,10 +12,15 @@
 
       <div class="form-group">
         <label for="password">CONTRASEÑA</label>
-        <input id="password" type="password" name="password" [(ngModel)]="loginData.password" required>
+        <div class="password-wrap">
+          <input id="password" [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="loginData.password" required>
+          <button type="button" class="toggle-pass" (click)="showPassword = !showPassword">
+            <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+          </button>
+        </div>
       </div>
 
-      <button type="submit">Iniciar Sesión</button>
+      <button type="submit" class="submit">Iniciar sesión</button>
     </form>
 
     <p class="footer-text">

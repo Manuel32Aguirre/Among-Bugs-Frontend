@@ -15,7 +15,8 @@ export class RegisterComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  // Datos que pide tu API según la documentación
+  showPassword = false;
+
   registerData = {
     username: '',
     email: '',

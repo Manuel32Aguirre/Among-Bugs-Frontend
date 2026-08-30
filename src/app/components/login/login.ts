@@ -18,6 +18,8 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
+  showPassword = false;
+
   loginData = {
     email: '',
     password: ''

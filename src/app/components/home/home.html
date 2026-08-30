@@ -1,109 +1,43 @@
-<div class="container mt-4 pb-5">
-  <div class="row g-4">
-
-    <div class="col-md-8">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="h5 mb-0 fw-bold" style="color: #3b82f6;"><i class="bi bi-broadcast"></i> TRIVIAS PÚBLICAS DISPONIBLES</h3>
-        <span class="badge" style="background-color: #111827; color: #f3f4f6;">
-          {{ publicTrivias().length }} trivias disponibles
-        </span>
-      </div>
-
-      <div class="row g-3" *ngIf="publicTrivias().length > 0; else noPublic">
-        <div class="col-md-6" *ngFor="let t of publicTrivias()">
-          <div class="card h-100 shadow-sm hover-card">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h5 class="card-title text-truncate" style="max-width: 70%;">{{ t.title }}</h5>
-                <span class="badge rounded-pill bg-info">
-                  {{ t.totalQuestions }} preguntas
-                </span>
-              </div>
-
-              <p class="card-text small" style="height: 3rem; overflow: hidden;">
-                {{ t.description }}
-              </p>
-
-              <div class="text-muted small mb-3" *ngIf="t.creatorUsername">
-                <i class="bi bi-person-fill me-1"></i>
-                <span>Creado por: <strong>{{ t.creatorUsername }}</strong></span>
-              </div>
-
-              <div class="d-flex justify-content-between align-items-center mt-3">
-                <div class="btn-group w-100">
-                  <button class="btn btn-sm btn-outline-secondary"
-                          (click)="viewRatings(t.id, $event)"
-                          title="Ver calificaciones">Ver calificaciones
-                  </button>
-                  <button class="btn btn-sm btn-outline-info"
-                          (click)="viewRankings(t.id)"
-                          title="Ver rankings">
-                    Ver rankings
-                  </button>
-                  <button class="btn btn-sm btn-primary flex-grow-1 fw-bold shadow-sm"
-                          (click)="playTrivia(t.id)">
-                    <i class="bi bi-play-fill"></i> JUGAR
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ng-template #noPublic>
-        <div class="text-center p-5 rounded-4 border" style="background-color: #f9fafb; border-color: #e5e7eb !important; border-style: dashed;">
-          <p class="text-secondary mb-0">No se han encontrado trivias disponibles...</p>
-        </div>
-      </ng-template>
+<section class="lobby-world">
+  <header class="hero">
+    <p class="eyebrow">Lobby en vivo</p>
+    <h1>Among Bugs</h1>
+    <p class="lead">Elige una sala y únete. El anfitrión prepara las preguntas; tú sobrevives… o saboteas.</p>
+    <div class="hero-actions">
+      <a routerLink="/rooms/create" class="btn-glow">Crear sala</a>
+      <button type="button" class="btn-ghost" (click)="refresh()">Actualizar</button>
     </div>
+  </header>
 
-    <div class="col-md-4">
-      <h3 class="h5 mb-4 fw-bold" style="color: #f59e0b;"><i class="bi bi-folder"></i> MIS TRIVIAS</h3>
-      <div class="list-group rounded-4 overflow-hidden shadow-lg" style="border: 1px solid #e5e7eb;">
-        <div *ngFor="let my of myTrivias()" class="list-group-item list-hover" style="background-color: #ffffff; border-color: #e5e7eb;">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="flex-grow-1">
-              <div class="fw-bold small" style="color: #1f2937;">{{ my.title }}</div>
-              <div class="text-secondary" style="font-size: 0.75rem;">{{ my.totalQuestions }} preguntas</div>
-            </div>
-            <div class="btn-group">
-              <button class="btn btn-outline-warning btn-sm" (click)="editTrivia(my.id)" title="Editar trivia">
-                Editar
-              </button>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="myTrivias().length === 0" class="list-group-item text-center p-5" style="background-color: #ffffff; border-color: #e5e7eb;">
-          <i class="bi bi-inbox d-block mb-2 opacity-50 fs-1" style="color: #6b7280;"></i>
-          <span class="small" style="color: #6b7280;">Aún no has diseñado trivias.</span>
-        </div>
+  <div class="room-grid" *ngIf="!loading; else loadingTpl">
+    <button
+      type="button"
+      class="room-card"
+      *ngFor="let room of rooms"
+      (click)="join(room.code)"
+      [disabled]="joiningCode === room.code">
+      <div class="room-code">{{ room.code }}</div>
+      <h2>{{ room.triviaTitle }}</h2>
+      <p>Anfitrión · {{ room.hostUsername }}</p>
+      <div class="meta">
+        <span>{{ room.playerCount }} / {{ room.maxPlayers }}</span>
+        <span>Meta {{ room.targetScore }} pts</span>
       </div>
+      <span class="join-label">{{ joiningCode === room.code ? 'Entrando…' : 'Unirse' }}</span>
+    </button>
 
-      <div class="d-grid mt-3 gap-2">
-        <button class="btn btn-outline-info btn-sm py-2" routerLink="/create-trivia">
-          <i class="bi bi-plus-circle"></i> CREAR NUEVA TRIVIA
-        </button>
-        <button class="btn btn-danger btn-sm py-2" routerLink="/rooms">
-          <i class="bi bi-people-fill"></i> SALAS MULTIJUGADOR (AMONG US)
-        </button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- Modal de Ratings -->
-<div class="modal fade show d-block" *ngIf="showRatingsModal" style="background: rgba(0,0,0,0.7);">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-    <div class="modal-content">
-      <div class="modal-header" style="background-color: #111827; color: #f3f4f6;">
-        <h5 class="modal-title">Calificaciones y Opiniones</h5>
-        <button type="button" class="btn-close btn-close-white" (click)="closeRatingsModal()"></button>
-      </div>
-      <div class="modal-body p-0">
-        <app-trivia-ratings *ngIf="selectedTriviaId" [triviaId]="selectedTriviaId"></app-trivia-ratings>
-      </div>
+    <div class="empty" *ngIf="rooms.length === 0">
+      <div class="pulse-orb"></div>
+      <h3>No hay salas abiertas</h3>
+      <p>Sé el primero en crear una misión.</p>
+      <a routerLink="/rooms/create" class="btn-glow">Crear sala</a>
     </div>
   </div>
-</div>
+
+  <ng-template #loadingTpl>
+    <div class="loading-block">
+      <div class="spinner"></div>
+      <p>Escaneando salas…</p>
+    </div>
+  </ng-template>
+</section>
