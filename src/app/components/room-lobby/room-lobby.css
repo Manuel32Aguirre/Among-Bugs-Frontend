@@ -2,6 +2,10 @@
   max-width: 980px;
   margin: 0 auto;
   padding: 2rem 1rem 3rem;
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.08), transparent 45%),
+    radial-gradient(circle at bottom, rgba(16, 185, 129, 0.06), transparent 40%);
+  min-height: 100vh;
 }
 
 .lobby-header {
@@ -131,9 +135,12 @@ select:focus {
   text-decoration: underline;
 }
 
-.card-panel .btn {
-  margin-top: 0.75rem;
-  border-radius: 10px;
-  padding: 0.75rem;
-  font-weight: 600;
+.card-panel .btn-primary {
+  background: linear-gradient(135deg, #111827, #4338ca);
+  border: none;
+}
+
+.card-panel .btn-outline-info {
+  border-color: #6366f1;
+  color: #4338ca;
 }

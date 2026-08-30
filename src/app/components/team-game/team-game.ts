@@ -6,6 +6,8 @@ import Swal from 'sweetalert2';
 import { AuthService } from '../../services/auth';
 import { RoomService } from '../../services/room.service';
 
+const MIN_PLAYERS = 3;
+
 @Component({
   selector: 'app-team-game',
   standalone: true,
@@ -20,15 +22,25 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
+  readonly minPlayers = MIN_PLAYERS;
+
   code = '';
   state: any = null;
   myQuestion: any = null;
   projectionQuestion: any = null;
   selectedAnswer: number | null = null;
+  answerLocked = false;
+  voteLocked = false;
+  private lastVoteRound = 0;
   questionTime = 0;
   projectionTime = 0;
-  traitorPanelOpen = true;
-  trickTargets: any[] = [];
+  showTrickModal = false;
+  trickOptions = [
+    { type: 'REDUCE_TIME', icon: '⏱️', label: 'Reducir tiempo', hint: 'La mitad del tiempo para todos' },
+    { type: 'UPSIDE_DOWN', icon: '🔄', label: 'Texto al revés', hint: 'Pregunta de cabeza para todos' },
+    { type: 'REVERSE_TEXT', icon: '🪞', label: 'Texto espejo', hint: 'Letras invertidas para todos' },
+    { type: 'SHUFFLE_WORDS', icon: '🔀', label: 'Mezclar palabras', hint: 'Orden caótico para todos' }
+  ];
   private timerSub?: Subscription;
 
   ngOnInit(): void {
@@ -41,6 +53,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
 
     this.roomService.connect(this.code, playerId, {
       onRoomUpdate: (state) => {
+        const prevRound = this.state?.currentRound;
         this.state = state;
         if (state.myQuestion) {
           this.myQuestion = state.myQuestion;
@@ -48,13 +61,17 @@ export class TeamGameComponent implements OnInit, OnDestroy {
         if (state.projectionQuestion) {
           this.projectionQuestion = state.projectionQuestion;
         }
-        this.trickTargets = (state.players || []).filter((p: any) => p.alive && p.playerId !== Number(playerId));
+        this.syncAnswerLock();
         this.syncTimer();
+        if (state.status === 'PLAYING' && state.currentRound !== prevRound) {
+          this.maybeOpenTraitorModal();
+        }
         this.cdr.detectChanges();
       },
       onPersonalQuestion: (question) => {
         this.myQuestion = question;
         this.selectedAnswer = null;
+        this.answerLocked = false;
         this.syncTimer();
         this.cdr.detectChanges();
       },
@@ -62,7 +79,12 @@ export class TeamGameComponent implements OnInit, OnDestroy {
         if (Number(playerId) === event.targetPlayerId) {
           this.myQuestion = event.updatedQuestion;
           this.syncTimer();
-          Swal.fire('¡Trampa!', event.message, 'warning');
+          Swal.fire({
+            icon: 'warning',
+            title: '¡Trampa!',
+            text: event.message,
+            confirmButtonColor: '#7c3aed'
+          });
           this.cdr.detectChanges();
         }
       }
@@ -73,7 +95,9 @@ export class TeamGameComponent implements OnInit, OnDestroy {
         this.state = state;
         this.myQuestion = state.myQuestion;
         this.projectionQuestion = state.projectionQuestion;
+        this.syncAnswerLock();
         this.syncTimer();
+        this.maybeOpenTraitorModal();
         this.cdr.detectChanges();
       },
       error: () => this.router.navigate(['/rooms'])
@@ -110,6 +134,29 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     return this.myRole?.role === 'TRAITOR';
   }
 
+  get canStartGame() {
+    return (this.state?.players?.length ?? 0) >= MIN_PLAYERS;
+  }
+
+  private syncAnswerLock(): void {
+    if (this.myRole?.answeredThisRound) {
+      this.answerLocked = true;
+    }
+    if (this.state?.status === 'VOTING' && this.state.currentRound !== this.lastVoteRound) {
+      this.voteLocked = false;
+      this.lastVoteRound = this.state.currentRound;
+    }
+    if (this.state?.status === 'PLAYING' && !this.myRole?.answeredThisRound) {
+      this.answerLocked = false;
+    }
+  }
+
+  private maybeOpenTraitorModal(): void {
+    if (this.state?.status === 'PLAYING' && this.isTraitor && this.canApplyTrick) {
+      this.showTrickModal = true;
+    }
+  }
+
   copyCode(): void {
     navigator.clipboard.writeText(this.state?.code || this.code).then(() => {
       Swal.fire({
@@ -128,31 +175,67 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     });
   }
 
-  submitAnswer(): void {
-    if (this.selectedAnswer === null) return;
-    this.roomService.answer(this.code, this.selectedAnswer).subscribe({
+  selectAnswer(optionIndex: number): void {
+    if (this.answerLocked || this.selectedAnswer !== null) {
+      return;
+    }
+    this.selectedAnswer = optionIndex;
+    this.answerLocked = true;
+    this.roomService.answer(this.code, optionIndex).subscribe({
       next: (state) => {
         this.state = state;
+        this.syncAnswerLock();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.answerLocked = false;
         this.selectedAnswer = null;
+        Swal.fire('Error', err.error?.message, 'error');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  openTrickModal(): void {
+    if (this.canApplyTrick) {
+      this.showTrickModal = true;
+    }
+  }
+
+  closeTrickModal(): void {
+    this.showTrickModal = false;
+  }
+
+  applyGlobalTrick(trickType: string): void {
+    if (!this.canApplyTrick) {
+      return;
+    }
+    this.roomService.applyTrick(this.code, trickType).subscribe({
+      next: () => {
+        this.showTrickModal = false;
+        Swal.fire({
+          icon: 'success',
+          title: 'Trampa activada',
+          text: 'Se aplicó a todos los tripulantes',
+          timer: 1400,
+          showConfirmButton: false
+        });
         this.cdr.detectChanges();
       },
       error: (err) => Swal.fire('Error', err.error?.message, 'error')
     });
   }
 
-  applyTrick(targetPlayerId: number, trickType: string): void {
-    this.roomService.applyTrick(this.code, targetPlayerId, trickType).subscribe({
-      error: (err) => Swal.fire('Error', err.error?.message, 'error')
-    });
-  }
-
-  toggleTraitorUi(traitorUiMode: boolean): void {
-    this.roomService.toggleTraitorUi(this.code, traitorUiMode).subscribe();
-  }
-
   vote(targetPlayerId: number): void {
+    if (this.voteLocked) {
+      return;
+    }
+    this.voteLocked = true;
     this.roomService.vote(this.code, targetPlayerId).subscribe({
-      error: (err) => Swal.fire('Error', err.error?.message, 'error')
+      error: (err) => {
+        this.voteLocked = false;
+        Swal.fire('Error', err.error?.message, 'error');
+      }
     });
   }
 

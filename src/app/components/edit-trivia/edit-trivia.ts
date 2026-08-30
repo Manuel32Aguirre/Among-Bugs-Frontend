@@ -157,6 +157,10 @@ export class EditTriviaComponent implements OnInit {
     });
   }
 
+  cancelEdit(): void {
+    this.router.navigate(['/home']);
+  }
+
   onUpdate() {
     // Validaciones (igual que en create)
     if (!this.trivia.title.trim()) {

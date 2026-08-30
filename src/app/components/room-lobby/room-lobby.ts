@@ -30,7 +30,6 @@ export class RoomLobbyComponent implements OnInit {
   mode: 'SOLO' | 'TEAM' = 'TEAM';
   triviaId: number | null = null;
   targetScore = 10;
-  maxPlayers = 12;
   joinCode = '';
   loadingTrivias = true;
   myTrivias: TriviaOption[] = [];
@@ -73,8 +72,7 @@ export class RoomLobbyComponent implements OnInit {
     this.roomService.createRoom({
       triviaId: this.triviaId,
       mode: this.mode,
-      targetScore: this.targetScore,
-      maxPlayers: this.maxPlayers
+      targetScore: this.targetScore
     }).subscribe({
       next: (res) => {
         this.router.navigate(['/room', res.code]);

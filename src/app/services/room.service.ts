@@ -13,7 +13,7 @@ export class RoomService {
   private baseUrl = `${environment.apiBaseUrl}/rooms`;
   private client?: Client;
 
-  createRoom(payload: { triviaId: number; mode: 'SOLO' | 'TEAM'; targetScore: number; maxPlayers: number }) {
+  createRoom(payload: { triviaId: number; mode: 'SOLO' | 'TEAM'; targetScore: number }) {
     return this.http.post<any>(this.baseUrl, payload);
   }
 
@@ -33,8 +33,8 @@ export class RoomService {
     return this.http.post<any>(`${this.baseUrl}/${code}/answer`, { optionIndex });
   }
 
-  applyTrick(code: string, targetPlayerId: number, trickType: string) {
-    return this.http.post<any>(`${this.baseUrl}/${code}/trick`, { targetPlayerId, trickType });
+  applyTrick(code: string, trickType: string) {
+    return this.http.post<any>(`${this.baseUrl}/${code}/trick`, { trickType });
   }
 
   toggleTraitorUi(code: string, traitorUiMode: boolean) {

@@ -3,6 +3,15 @@
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
   color: #1f2937;
+  background:
+    radial-gradient(circle at top right, rgba(124, 58, 237, 0.08), transparent 35%),
+    radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.08), transparent 40%);
+  min-height: 100vh;
+}
+
+.card-glow {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
 }
 
 .top-bar,
@@ -44,12 +53,21 @@
   color: #374151;
 }
 
-.score-box button {
+.score-box button,
+.ghost-btn {
   background: #f3f4f6;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 0.45rem 0.75rem;
   cursor: pointer;
+}
+
+.score-pill {
+  background: linear-gradient(135deg, #111827, #374151);
+  color: #fff;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
 }
 
 .players-strip {
@@ -134,37 +152,80 @@
 }
 
 .options button,
-.confirm,
+.option-btn,
 .start-btn,
-.vote-panel button {
+.vote-card,
+.sabotage-btn {
   background: #ffffff;
   color: #111827;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
-  padding: 0.75rem;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
   cursor: pointer;
-  font-weight: 500;
-  text-align: left;
-}
-
-.options button.selected {
-  border-color: #111827;
-  background: #111827;
-  color: #ffffff;
-}
-
-.confirm,
-.start-btn {
-  background: #111827;
-  color: #ffffff;
-  border-color: #111827;
-  text-align: center;
   font-weight: 600;
+  text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.vote-panel button:hover:not(:disabled) {
-  border-color: #ef4444;
-  color: #b91c1c;
+.options button:hover:not(:disabled),
+.option-btn:hover:not(:disabled),
+.vote-card:hover:not(:disabled),
+.sabotage-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  border-color: #6366f1;
+}
+
+.options button.selected,
+.option-btn.selected {
+  border-color: #111827;
+  background: linear-gradient(135deg, #111827, #374151);
+  color: #ffffff;
+}
+
+.options button.locked,
+.option-btn.locked {
+  opacity: 0.45;
+}
+
+.options button:disabled,
+.option-btn:disabled {
+  cursor: not-allowed;
+}
+
+.start-btn,
+.sabotage-btn {
+  text-align: center;
+  background: linear-gradient(135deg, #111827, #4c1d95);
+  color: #ffffff;
+  border: none;
+}
+
+.start-btn:disabled,
+.sabotage-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.locked-note {
+  text-align: center;
+  color: #059669;
+  font-weight: 700;
+  margin-top: 0.75rem;
+}
+
+.timer.ring {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin: 0 auto 1rem;
+  background: #fff;
+  border: 4px solid #6366f1;
+  color: #312e81;
 }
 
 .upside-down {
@@ -420,4 +481,136 @@
 
 .final-scores li {
   padding: 0.35rem 0;
+}
+
+.traitor-screen {
+  text-align: center;
+  padding: 2rem;
+}
+
+.traitor-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #7c3aed, #ef4444);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+}
+
+.traitor-copy,
+.trick-counter,
+.player-count,
+.vote-help,
+.modal-subtitle {
+  color: #6b7280;
+}
+
+.trick-counter {
+  font-weight: 700;
+  margin: 1rem 0;
+}
+
+.players-strip.compact {
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.vote-tag {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+}
+
+.vote-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.vote-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trick-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.trick-modal {
+  position: relative;
+  width: min(560px, 100%);
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.85rem;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.trick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.trick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fafafa;
+  cursor: pointer;
+  text-align: left;
+}
+
+.trick-card:hover {
+  border-color: #7c3aed;
+  background: #f5f3ff;
+}
+
+.trick-icon {
+  font-size: 1.4rem;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  margin: 0 auto 0.75rem;
+  animation: spin 0.8s linear infinite;
+}
+
+.answered-state {
+  color: #059669;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
