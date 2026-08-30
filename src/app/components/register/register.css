@@ -94,6 +94,32 @@ input {
 .footer-text { margin-top: 1.25rem; font-size: 0.9rem; color: #94a3b8; }
 .footer-text a { color: #67e8f9; text-decoration: none; font-weight: 700; }
 
+.lang-float {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  overflow: hidden;
+  z-index: 20;
+}
+
+.lang-float button {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-weight: 800;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+.lang-float button.active {
+  background: linear-gradient(135deg, #22d3ee, #6366f1);
+  color: #0f172a;
+}
+
 @keyframes rise {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }

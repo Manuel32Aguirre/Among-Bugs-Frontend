@@ -1,81 +1,75 @@
 <div class="game-world" *ngIf="state">
 
-  <!-- ROLE REVEAL -->
   <div class="reveal-overlay" *ngIf="showRoleOverlay && !isHost" [class.crew]="!isTraitor" [class.traitor]="isTraitor">
     <div class="reveal-burst"></div>
-    <p class="reveal-eyebrow">Tu rol</p>
-    <h1 class="reveal-title">{{ isTraitor ? 'TRAIDOR' : 'TRIPULANTE' }}</h1>
-    <p class="reveal-sub">{{ isTraitor ? 'Sabotéa al equipo. No respondes preguntas.' : 'Completa las tareas. Encuentra al impostor.' }}</p>
+    <p class="reveal-eyebrow">{{ 'game.yourRole' | t }}</p>
+    <h1 class="reveal-title">{{ isTraitor ? ('game.traitor' | t) : ('game.crewmate' | t) }}</h1>
+    <p class="reveal-sub">{{ isTraitor ? ('game.traitorHint' | t) : ('game.crewHint' | t) }}</p>
   </div>
 
   <div class="reveal-overlay host-wait" *ngIf="showRoleOverlay && isHost">
-    <h1 class="reveal-title crew-tone">Revelando roles…</h1>
-    <p class="reveal-sub">La partida arranca en segundos</p>
+    <h1 class="reveal-title crew-tone">{{ 'game.revealing' | t }}</h1>
+    <p class="reveal-sub">{{ 'game.startingSoon' | t }}</p>
   </div>
 
-  <!-- EJECTION REVEAL (host projector + all) -->
   <div class="eject-overlay" *ngIf="showEjectionOverlay">
     <div class="eject-stage">
       <div class="eject-pod" [class.traitor]="state.ejectionReveal?.wasTraitor && !state.ejectionReveal?.skipped"
            [class.innocent]="!state.ejectionReveal?.wasTraitor && !state.ejectionReveal?.skipped"
            [class.skip]="state.ejectionReveal?.skipped">
         <div class="ghost-spin" *ngIf="!state.ejectionReveal?.skipped">👻</div>
-        <h2 *ngIf="state.ejectionReveal?.skipped">Nadie fue expulsado</h2>
-        <h2 *ngIf="!state.ejectionReveal?.skipped">{{ state.ejectionReveal?.username }} fue expulsado</h2>
+        <h2 *ngIf="state.ejectionReveal?.skipped">{{ 'game.nobodyEjected' | t }}</h2>
+        <h2 *ngIf="!state.ejectionReveal?.skipped">{{ 'game.wasEjected' | t: state.ejectionReveal?.username }}</h2>
         <p class="eject-verdict" *ngIf="!state.ejectionReveal?.skipped">
-          {{ state.ejectionReveal?.wasTraitor ? 'Era el TRAIDOR' : 'Era INOCENTE' }}
+          {{ state.ejectionReveal?.wasTraitor ? ('game.wasTraitor' | t) : ('game.wasInnocent' | t) }}
         </p>
-        <p class="eject-verdict skip-msg" *ngIf="state.ejectionReveal?.skipped">Sin mayoría. La misión continúa.</p>
+        <p class="eject-verdict skip-msg" *ngIf="state.ejectionReveal?.skipped">{{ 'game.noMajority' | t }}</p>
       </div>
     </div>
   </div>
 
-  <!-- Dead player screen -->
   <section class="dead-screen" *ngIf="isDead && state.status !== 'FINISHED' && state.status !== 'EJECTION_REVEAL' && !isHost">
     <div class="ghost-big">👻</div>
-    <h1>Has sido expulsado</h1>
-    <p>Observa el resto de la partida desde el más allá.</p>
+    <h1>{{ 'game.youEjected' | t }}</h1>
+    <p>{{ 'game.ghostWatch' | t }}</p>
   </section>
 
   <header class="top-bar" *ngIf="(!isHost || state.status !== 'LOBBY') && !showRoleOverlay">
     <div>
-      <h1>Sala {{ state.code }}</h1>
-      <p>{{ state.triviaTitle }} · Ronda {{ state.currentRound || '—' }}</p>
+      <h1>{{ 'game.room' | t: state.code }}</h1>
+      <p>{{ state.triviaTitle }} · {{ 'game.round' | t: (state.currentRound || '—') }}</p>
     </div>
     <div class="score-box">
-      <span class="score-pill" *ngIf="isHost">Equipo {{ state.teamScore }} / {{ state.targetScore }}</span>
-      <button class="ghost-btn" (click)="leaveRoom()">Salir</button>
+      <span class="score-pill" *ngIf="isHost">{{ 'game.teamScore' | t: state.teamScore: state.targetScore }}</span>
+      <button class="ghost-btn" (click)="leaveRoom()">{{ 'game.leave' | t }}</button>
     </div>
   </header>
 
-  <!-- Host lobby -->
   <section *ngIf="state.status === 'LOBBY' && isHost" class="panel host-lobby">
-    <p class="host-label">Pantalla del anfitrión</p>
+    <p class="host-label">{{ 'game.hostScreen' | t }}</p>
     <h1>{{ state.triviaTitle }}</h1>
-    <p class="muted">Tú diseñas la misión. No juegas.</p>
+    <p class="muted">{{ 'game.hostHint' | t }}</p>
     <div class="code-display">
-      <span>Código</span>
+      <span>{{ 'game.code' | t }}</span>
       <strong>{{ state.code }}</strong>
-      <button (click)="copyCode()">Copiar</button>
+      <button (click)="copyCode()">{{ 'game.copy' | t }}</button>
     </div>
-    <h2>Tripulación · {{ state.players.length }}</h2>
-    <p class="muted">Mínimo {{ minPlayers }} para iniciar</p>
+    <h2>{{ 'game.crewCount' | t: state.players.length }}</h2>
+    <p class="muted">{{ 'game.minPlayers' | t: minPlayers }}</p>
     <ul class="player-list">
       <li *ngFor="let p of state.players"><span class="dot"></span>{{ p.username }}</li>
     </ul>
-    <button class="btn-glow" (click)="startGame()" [disabled]="!canStartGame">Iniciar partida</button>
+    <button class="btn-glow" (click)="startGame()" [disabled]="!canStartGame">{{ 'game.start' | t }}</button>
   </section>
 
-  <!-- Player lobby -->
   <section *ngIf="state.status === 'LOBBY' && !isHost" class="panel">
     <div class="code-display compact"><strong>{{ state.code }}</strong></div>
-    <h2>Esperando al anfitrión</h2>
+    <h2>{{ 'game.waitingHost' | t }}</h2>
     <ul class="player-list">
       <li *ngFor="let p of state.players"><span class="dot"></span>{{ p.username }}</li>
     </ul>
   </section>
 
-  <!-- Host spectator / projector -->
   <section *ngIf="isHost && state.status !== 'LOBBY' && state.status !== 'FINISHED' && !showRoleOverlay && !showEjectionOverlay" class="panel host-projector">
     <div class="players-strip">
       <div *ngFor="let p of state.players" class="chip" [class.dead]="!p.alive">
@@ -85,34 +79,32 @@
     </div>
     <div *ngIf="projectionQuestion" class="projection">
       <div class="timer">{{ projectionTime }}s</div>
-      <p class="round-label">Pregunta · ronda {{ state.currentRound }}</p>
+      <p class="round-label">{{ 'game.projectionQ' | t: state.currentRound }}</p>
       <h2 [ngClass]="getProjectionClass()">{{ projectionQuestion.displayText }}</h2>
       <ul class="proj-opts">
         <li *ngFor="let opt of projectionQuestion.options">{{ opt.text }}</li>
       </ul>
     </div>
-    <p class="muted" *ngIf="state.status === 'VOTING'">Votación en curso…</p>
+    <p class="muted" *ngIf="state.status === 'VOTING'">{{ 'game.votingNow' | t }}</p>
     <p class="muted" *ngIf="state.roundsUntilVote != null && state.status === 'PLAYING'">
-      Próxima votación en ~{{ state.roundsUntilVote }} ronda(s)
+      {{ 'game.nextVote' | t: state.roundsUntilVote }}
     </p>
   </section>
 
-  <!-- Traitor play -->
   <section *ngIf="!isHost && !isDead && state.status === 'PLAYING' && isTraitor && !showRoleOverlay" class="panel traitor-panel">
-    <div class="badge-traitor">Eres el traidor</div>
-    <h2>Panel de sabotaje</h2>
-    <p class="muted">No respondes preguntas. Aplica trampas a todos.</p>
-    <p class="trick-count">{{ tricksRemaining }} trampas restantes</p>
-    <button class="btn-glow danger" (click)="openTrickModal()" [disabled]="!canApplyTrick">Abrir trampas</button>
+    <div class="badge-traitor">{{ 'game.traitorBadge' | t }}</div>
+    <h2>{{ 'game.sabotage' | t }}</h2>
+    <p class="muted">{{ 'game.sabotageHint' | t }}</p>
+    <p class="trick-count">{{ 'game.tricksLeft' | t: tricksRemaining }}</p>
+    <button class="btn-glow danger" (click)="openTrickModal()" [disabled]="!canApplyTrick">{{ 'game.openTricks' | t }}</button>
   </section>
 
-  <!-- Crew play -->
   <section *ngIf="!isHost && !isDead && state.status === 'PLAYING' && !isTraitor && !showRoleOverlay" class="panel play-panel">
     <div *ngIf="!myQuestion && !answerLocked" class="waiting">
       <div class="spinner"></div>
-      <p>Cargando pregunta…</p>
+      <p>{{ 'game.loadingQ' | t }}</p>
     </div>
-    <div *ngIf="answerLocked && !myQuestion" class="waiting ok">Respuesta enviada. Esperando al equipo…</div>
+    <div *ngIf="answerLocked && !myQuestion" class="waiting ok">{{ 'game.answeredWait' | t }}</div>
     <div *ngIf="myQuestion" class="question">
       <div class="timer">{{ questionTime }}s</div>
       <h2 [ngClass]="getDisplayClass()">{{ myQuestion.displayText }}</h2>
@@ -129,20 +121,18 @@
     </div>
   </section>
 
-  <!-- Voting -->
   <section *ngIf="!isHost && !isDead && state.status === 'VOTING'" class="panel vote-panel">
-    <h2>Votación</h2>
-    <p class="muted">Un toque = tu voto. Sin mayoría no hay expulsión. También puedes saltar.</p>
+    <h2>{{ 'game.vote' | t }}</h2>
+    <p class="muted">{{ 'game.voteHint' | t }}</p>
     <div class="vote-grid">
       <button *ngFor="let tally of state.voteTally" class="vote-card" [disabled]="voteLocked" (click)="vote(tally.targetPlayerId)">
         <strong>{{ tally.username }}</strong>
         <span>{{ tally.votes }}</span>
       </button>
     </div>
-    <button class="btn-skip" [disabled]="voteLocked" (click)="skipVote()">Saltar voto ({{ state.skipVotes || 0 }})</button>
+    <button class="btn-skip" [disabled]="voteLocked" (click)="skipVote()">{{ 'game.skipVote' | t: (state.skipVotes || 0) }}</button>
   </section>
 
-  <!-- Finished lineup -->
   <section *ngIf="state.status === 'FINISHED'" class="panel finish-panel">
     <h1 class="winner">{{ state.winnerMessage }}</h1>
     <div class="lineup">
@@ -152,26 +142,25 @@
            [class.traitor-slot]="p.role === 'TRAITOR'">
         <div class="avatar">{{ p.alive ? (p.role === 'TRAITOR' ? '😈' : '🧑‍🚀') : '👻' }}</div>
         <strong>{{ p.username }}</strong>
-        <span>{{ p.role === 'TRAITOR' ? (p.alive ? 'Traidor' : 'Traidor caído') : (p.alive ? 'Tripulante' : 'Fantasma') }}</span>
+        <span>{{ p.role === 'TRAITOR' ? (p.alive ? ('game.traitorAlive' | t) : ('game.traitorDead' | t)) : (p.alive ? ('game.aliveCrew' | t) : ('game.ghost' | t)) }}</span>
       </div>
     </div>
 
     <div class="rating-box" *ngIf="!isHost">
-      <p>Califica la partida</p>
+      <p>{{ 'game.rate' | t }}</p>
       <div class="stars">
         <button type="button" *ngFor="let s of [1,2,3,4,5]" (click)="submitRating(s)" [class.on]="ratingScore >= s" [disabled]="rated">★</button>
       </div>
     </div>
 
-    <button class="btn-glow" (click)="leaveRoom()">Volver al lobby</button>
+    <button class="btn-glow" (click)="leaveRoom()">{{ 'game.backLobby' | t }}</button>
   </section>
 
-  <!-- Trick modal -->
   <div class="modal-back" *ngIf="showTrickModal" (click)="closeTrickModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <button class="close" (click)="closeTrickModal()">×</button>
-      <h3>Trampa global</h3>
-      <p class="muted">Se aplica a todos los tripulantes vivos</p>
+      <h3>{{ 'game.trickGlobal' | t }}</h3>
+      <p class="muted">{{ 'game.trickAll' | t }}</p>
       <div class="trick-grid">
         <button *ngFor="let t of trickOptions" (click)="applyGlobalTrick(t.type)">
           <span>{{ t.icon }}</span>

@@ -1,11 +1,11 @@
 <section class="lobby-world">
   <header class="hero">
-    <p class="eyebrow">Lobby en vivo</p>
+    <p class="eyebrow">{{ 'home.eyebrow' | t }}</p>
     <h1>Among Bugs</h1>
-    <p class="lead">Elige una sala y únete. El anfitrión prepara las preguntas; tú sobrevives… o saboteas.</p>
+    <p class="lead">{{ 'home.lead' | t }}</p>
     <div class="hero-actions">
-      <a routerLink="/rooms/create" class="btn-glow">Crear sala</a>
-      <button type="button" class="btn-ghost" (click)="refresh()">Actualizar</button>
+      <a routerLink="/rooms/create" class="btn-glow">{{ 'home.create' | t }}</a>
+      <button type="button" class="btn-ghost" (click)="refresh()">{{ 'home.refresh' | t }}</button>
     </div>
   </header>
 
@@ -18,26 +18,26 @@
       [disabled]="joiningCode === room.code">
       <div class="room-code">{{ room.code }}</div>
       <h2>{{ room.triviaTitle }}</h2>
-      <p>Anfitrión · {{ room.hostUsername }}</p>
+      <p>{{ 'home.host' | t }} · {{ room.hostUsername }}</p>
       <div class="meta">
         <span>{{ room.playerCount }} / {{ room.maxPlayers }}</span>
-        <span>Meta {{ room.targetScore }} pts</span>
+        <span>{{ 'home.goal' | t: room.targetScore }}</span>
       </div>
-      <span class="join-label">{{ joiningCode === room.code ? 'Entrando…' : 'Unirse' }}</span>
+      <span class="join-label">{{ joiningCode === room.code ? ('home.joining' | t) : ('home.join' | t) }}</span>
     </button>
 
     <div class="empty" *ngIf="rooms.length === 0">
       <div class="pulse-orb"></div>
-      <h3>No hay salas abiertas</h3>
-      <p>Sé el primero en crear una misión.</p>
-      <a routerLink="/rooms/create" class="btn-glow">Crear sala</a>
+      <h3>{{ 'home.emptyTitle' | t }}</h3>
+      <p>{{ 'home.emptyText' | t }}</p>
+      <a routerLink="/rooms/create" class="btn-glow">{{ 'home.create' | t }}</a>
     </div>
   </div>
 
   <ng-template #loadingTpl>
     <div class="loading-block">
       <div class="spinner"></div>
-      <p>Escaneando salas…</p>
+      <p>{{ 'home.scanning' | t }}</p>
     </div>
   </ng-template>
 </section>

@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
 import { RoomService } from '../../services/room.service';
+import { LanguageService } from '../../services/language.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-room-create',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './room-create.html',
   styleUrl: './room-create.css'
 })
@@ -16,6 +18,7 @@ export class RoomCreateComponent {
   private roomService = inject(RoomService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private lang = inject(LanguageService);
 
   mode: 'manual' | 'ai' = 'ai';
   targetScore = 10;
@@ -81,7 +84,7 @@ export class RoomCreateComponent {
 
     if (this.mode === 'ai') {
       if (!this.aiPrompt.trim()) {
-        Swal.fire('Atención', 'Escribe un prompt para la IA', 'warning');
+        Swal.fire(this.lang.t('common.attention'), this.lang.t('create.needPrompt'), 'warning');
         return;
       }
       payload.generate = {
@@ -91,12 +94,12 @@ export class RoomCreateComponent {
       };
     } else {
       if (!this.trivia.title.trim() || !this.trivia.description.trim()) {
-        Swal.fire('Atención', 'Completa título y descripción', 'warning');
+        Swal.fire(this.lang.t('common.attention'), this.lang.t('create.needFields'), 'warning');
         return;
       }
       for (const q of this.trivia.questions) {
         if (!q.questionText.trim() || q.options.some(o => !o.text.trim())) {
-          Swal.fire('Atención', 'Completa todas las preguntas y opciones', 'warning');
+          Swal.fire(this.lang.t('common.attention'), this.lang.t('create.needQuestions'), 'warning');
           return;
         }
       }
@@ -109,7 +112,7 @@ export class RoomCreateComponent {
       error: (err) => {
         this.submitting = false;
         this.cdr.detectChanges();
-        Swal.fire('Error', err.error?.message || 'No se pudo crear la sala', 'error');
+        Swal.fire(this.lang.t('common.error'), err.error?.message || this.lang.t('create.error'), 'error');
       }
     });
   }

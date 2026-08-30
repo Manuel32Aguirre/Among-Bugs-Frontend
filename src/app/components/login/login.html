@@ -1,17 +1,22 @@
 <div class="auth-world">
+  <div class="lang-float">
+    <button type="button" [class.active]="lang.lang() === 'es-MX'" (click)="lang.setLang('es-MX')">ES</button>
+    <button type="button" [class.active]="lang.lang() === 'en'" (click)="lang.setLang('en')">EN</button>
+  </div>
+
   <div class="auth-card">
     <div class="logo-glow">AB</div>
-    <h2>Among Bugs</h2>
-    <p class="subtitle">Inicia sesión para jugar</p>
+    <h2>{{ 'login.title' | t }}</h2>
+    <p class="subtitle">{{ 'login.subtitle' | t }}</p>
 
     <form (ngSubmit)="onLogin()">
       <div class="form-group">
-        <label for="email">CORREO ELECTRÓNICO</label>
+        <label for="email">{{ 'login.email' | t }}</label>
         <input id="email" type="email" name="email" [(ngModel)]="loginData.email" required>
       </div>
 
       <div class="form-group">
-        <label for="password">CONTRASEÑA</label>
+        <label for="password">{{ 'login.password' | t }}</label>
         <div class="password-wrap">
           <input id="password" [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="loginData.password" required>
           <button type="button" class="toggle-pass" (click)="showPassword = !showPassword">
@@ -20,11 +25,11 @@
         </div>
       </div>
 
-      <button type="submit" class="submit">Iniciar sesión</button>
+      <button type="submit" class="submit">{{ 'login.submit' | t }}</button>
     </form>
 
     <p class="footer-text">
-      ¿No tienes cuenta? <a routerLink="/register">Regístrate</a>
+      {{ 'login.noAccount' | t }} <a routerLink="/register">{{ 'login.register' | t }}</a>
     </p>
   </div>
 </div>

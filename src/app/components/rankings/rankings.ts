@@ -35,9 +35,7 @@ export class RankingsComponent implements OnInit {
   }
 
   private getAuthHeaders() {
-    return new HttpHeaders({
-      'Accept-Language': 'es-MX'
-    });
+    return new HttpHeaders({});
   }
 
   loadRankings(): void {

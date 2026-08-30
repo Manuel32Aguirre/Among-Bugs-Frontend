@@ -1,53 +1,53 @@
 <section class="create-world">
-  <a routerLink="/home" class="back">← Salas</a>
+  <a routerLink="/home" class="back">{{ 'create.back' | t }}</a>
   <header>
-    <h1>Crear misión</h1>
-    <p>Diseña las preguntas (o deja que Groq lo haga). Tú serás el anfitrión y no juegas.</p>
+    <h1>{{ 'create.title' | t }}</h1>
+    <p>{{ 'create.lead' | t }}</p>
   </header>
 
   <div class="mode-switch">
-    <button type="button" [class.active]="mode === 'ai'" (click)="setMode('ai')">Con IA (Groq)</button>
-    <button type="button" [class.active]="mode === 'manual'" (click)="setMode('manual')">Personalizada</button>
+    <button type="button" [class.active]="mode === 'ai'" (click)="setMode('ai')">{{ 'create.ai' | t }}</button>
+    <button type="button" [class.active]="mode === 'manual'" (click)="setMode('manual')">{{ 'create.manual' | t }}</button>
   </div>
 
   <label class="field">
-    Meta de puntos del equipo
+    {{ 'create.target' | t }}
     <input type="number" [(ngModel)]="targetScore" min="1" max="100">
   </label>
 
   <div class="panel" *ngIf="mode === 'ai'">
     <label class="field">
-      Prompt
-      <textarea [(ngModel)]="aiPrompt" rows="4" placeholder="Ej. Preguntas de ciberseguridad para principiantes"></textarea>
+      {{ 'create.prompt' | t }}
+      <textarea [(ngModel)]="aiPrompt" rows="4" [placeholder]="'create.promptPh' | t"></textarea>
     </label>
     <label class="field">
-      Número de preguntas
+      {{ 'create.qCount' | t }}
       <input type="number" [(ngModel)]="aiCount" min="3" max="20">
     </label>
   </div>
 
   <div class="panel" *ngIf="mode === 'manual'">
-    <label class="field">Título <input [(ngModel)]="trivia.title" maxlength="50"></label>
-    <label class="field">Descripción <textarea [(ngModel)]="trivia.description" rows="2" maxlength="200"></textarea></label>
+    <label class="field">{{ 'create.triviaTitle' | t }} <input [(ngModel)]="trivia.title" maxlength="50"></label>
+    <label class="field">{{ 'create.desc' | t }} <textarea [(ngModel)]="trivia.description" rows="2" maxlength="200"></textarea></label>
 
     <div class="q-card" *ngFor="let q of trivia.questions; let i = index">
       <div class="q-head">
-        <strong>Pregunta {{ i + 1 }}</strong>
-        <button type="button" class="danger" (click)="removeQuestion(i)">Quitar</button>
+        <strong>{{ 'create.question' | t: (i + 1) }}</strong>
+        <button type="button" class="danger" (click)="removeQuestion(i)">{{ 'create.remove' | t }}</button>
       </div>
-      <input [(ngModel)]="q.questionText" placeholder="Texto de la pregunta">
+      <input [(ngModel)]="q.questionText" [placeholder]="'create.qPh' | t">
       <div class="opts">
         <div class="opt" *ngFor="let opt of q.options; let j = index">
           <input type="radio" [name]="'c'+i" [checked]="opt.isCorrect" (change)="markCorrect(i, j)">
-          <input [(ngModel)]="opt.text" placeholder="Opción">
+          <input [(ngModel)]="opt.text" [placeholder]="'create.optPh' | t">
         </div>
       </div>
-      <button type="button" class="linkish" (click)="addOption(i)">+ Opción</button>
+      <button type="button" class="linkish" (click)="addOption(i)">{{ 'create.addOpt' | t }}</button>
     </div>
-    <button type="button" class="btn-secondary" (click)="addQuestion()">+ Pregunta</button>
+    <button type="button" class="btn-secondary" (click)="addQuestion()">{{ 'create.addQ' | t }}</button>
   </div>
 
   <button type="button" class="btn-glow wide" (click)="create()" [disabled]="submitting">
-    {{ submitting ? 'Creando…' : 'Crear sala y entrar' }}
+    {{ submitting ? ('create.submitting' | t) : ('create.submit' | t) }}
   </button>
 </section>

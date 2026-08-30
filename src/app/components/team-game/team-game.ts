@@ -6,6 +6,8 @@ import { interval, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../services/auth';
 import { RoomService } from '../../services/room.service';
+import { LanguageService } from '../../services/language.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { environment } from '../../../environments/environment';
 
 const MIN_PLAYERS = 3;
@@ -13,7 +15,7 @@ const MIN_PLAYERS = 3;
 @Component({
   selector: 'app-team-game',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './team-game.html',
   styleUrl: './team-game.css'
 })
@@ -24,6 +26,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private lang = inject(LanguageService);
 
   readonly minPlayers = MIN_PLAYERS;
 
@@ -76,7 +79,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
         if (Number(playerId) === event.targetPlayerId) {
           this.myQuestion = event.updatedQuestion;
           this.syncTimer();
-          Swal.fire({ icon: 'warning', title: '¡Trampa!', text: event.message, confirmButtonColor: '#7c3aed' });
+          Swal.fire({ icon: 'warning', title: this.lang.t('game.trick'), text: event.message, confirmButtonColor: '#7c3aed' });
           this.cdr.detectChanges();
         }
       }
@@ -235,7 +238,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
 
   copyCode(): void {
     navigator.clipboard.writeText(this.state?.code || this.code).then(() => {
-      Swal.fire({ icon: 'success', title: 'Copiado', timer: 1000, showConfirmButton: false });
+      Swal.fire({ icon: 'success', title: this.lang.t('game.copied'), timer: 1000, showConfirmButton: false });
     });
   }
 
@@ -273,7 +276,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.roomService.applyTrick(this.code, trickType).subscribe({
       next: () => {
         this.showTrickModal = false;
-        Swal.fire({ icon: 'success', title: 'Trampa activada', timer: 1200, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: this.lang.t('game.trickOn'), timer: 1200, showConfirmButton: false });
       },
       error: (err) => Swal.fire('Error', err.error?.message, 'error')
     });
@@ -337,7 +340,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.http.post(`${environment.apiBaseUrl}/ratings/trivia/${this.state.triviaId}`, { score }).subscribe({
       next: () => {
         this.rated = true;
-        Swal.fire({ icon: 'success', title: '¡Gracias!', timer: 1200, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: this.lang.t('game.thanks'), timer: 1200, showConfirmButton: false });
         this.cdr.detectChanges();
       },
       error: (err) => Swal.fire('Error', err.error?.message || 'No se pudo calificar', 'error')

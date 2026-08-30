@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../services/auth';
+import { LanguageService } from '../../services/language.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { Subscription, filter } from 'rxjs';
 import Swal from 'sweetalert2';
 import { environment } from '../../../environments/environment';
@@ -10,7 +12,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
@@ -19,6 +21,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
+  readonly lang = inject(LanguageService);
   private baseUrl = environment.apiBaseUrl;
 
   username: string = '';

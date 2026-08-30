@@ -1,35 +1,40 @@
 <div class="auth-world">
+  <div class="lang-float">
+    <button type="button" [class.active]="lang.lang() === 'es-MX'" (click)="lang.setLang('es-MX')">ES</button>
+    <button type="button" [class.active]="lang.lang() === 'en'" (click)="lang.setLang('en')">EN</button>
+  </div>
+
   <div class="auth-card">
     <div class="logo-glow">AB</div>
-    <h2>Among Bugs</h2>
-    <p class="subtitle">Únete a la tripulación</p>
+    <h2>{{ 'login.title' | t }}</h2>
+    <p class="subtitle">{{ 'register.subtitle' | t }}</p>
 
     <form (ngSubmit)="onRegister()">
       <div class="form-group">
-        <label>NOMBRE DE USUARIO</label>
+        <label>{{ 'register.username' | t }}</label>
         <input type="text" name="username" [(ngModel)]="registerData.username" required>
       </div>
 
       <div class="form-group">
-        <label>CORREO ELECTRÓNICO</label>
+        <label>{{ 'login.email' | t }}</label>
         <input type="email" name="email" [(ngModel)]="registerData.email" required>
       </div>
 
       <div class="form-group">
-        <label>CONTRASEÑA</label>
+        <label>{{ 'login.password' | t }}</label>
         <div class="password-wrap">
           <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="registerData.password" required>
-          <button type="button" class="toggle-pass" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Ocultar' : 'Mostrar'">
+          <button type="button" class="toggle-pass" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Hide' : 'Show'">
             <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
           </button>
         </div>
       </div>
 
-      <button type="submit" class="submit">Crear cuenta</button>
+      <button type="submit" class="submit">{{ 'register.submit' | t }}</button>
     </form>
 
     <p class="footer-text">
-      ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+      {{ 'register.hasAccount' | t }} <a routerLink="/login">{{ 'register.login' | t }}</a>
     </p>
   </div>
 </div>

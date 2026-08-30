@@ -4,12 +4,19 @@
     <span class="brand-text">Among Bugs</span>
   </a>
 
-  <div class="nav-actions" *ngIf="isLoggedIn">
-    <a class="nav-cta" routerLink="/rooms/create">Crear sala</a>
-    <div class="user-pill">
-      <i class="bi bi-person-fill"></i>
-      {{ username || 'Tripulante' }}
-      <button type="button" class="logout" (click)="logout()">Salir</button>
+  <div class="nav-actions">
+    <div class="lang-switch" *ngIf="true">
+      <button type="button" [class.active]="lang.lang() === 'es-MX'" (click)="lang.setLang('es-MX')">{{ 'lang.es' | t }}</button>
+      <button type="button" [class.active]="lang.lang() === 'en'" (click)="lang.setLang('en')">{{ 'lang.en' | t }}</button>
     </div>
+
+    <ng-container *ngIf="isLoggedIn">
+      <a class="nav-cta" routerLink="/rooms/create">{{ 'nav.createRoom' | t }}</a>
+      <div class="user-pill">
+        <i class="bi bi-person-fill"></i>
+        {{ username || ('nav.crew' | t) }}
+        <button type="button" class="logout" (click)="logout()">{{ 'nav.logout' | t }}</button>
+      </div>
+    </ng-container>
   </div>
 </nav>

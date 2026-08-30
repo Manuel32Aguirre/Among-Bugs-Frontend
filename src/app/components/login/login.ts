@@ -1,22 +1,22 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
+import { LanguageService } from '../../services/language.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { Router, RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    FormsModule,
-    RouterLink
-  ],
+  imports: [FormsModule, RouterLink, TranslatePipe],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  readonly lang = inject(LanguageService);
 
   showPassword = false;
 
@@ -32,8 +32,8 @@ export class LoginComponent {
 
         Swal.fire({
           icon: 'success',
-          title: 'Bienvenido',
-          text: 'Inicio de sesión exitoso',
+          title: this.lang.t('login.welcome'),
+          text: this.lang.t('login.success'),
           timer: 1500,
           showConfirmButton: false
         });
@@ -43,11 +43,10 @@ export class LoginComponent {
         }, 1500);
       },
       error: (err) => {
-        const errorMsg = err.error.message || 'Credenciales incorrectas';
         Swal.fire({
           icon: 'error',
-          title: 'Error de autenticación',
-          text: errorMsg,
+          title: this.lang.t('common.error'),
+          text: err.error?.message || 'Error',
           confirmButtonColor: '#111827'
         });
       }

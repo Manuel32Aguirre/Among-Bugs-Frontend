@@ -1,19 +1,22 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
+import { LanguageService } from '../../services/language.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { Router, RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, TranslatePipe],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
 export class RegisterComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  readonly lang = inject(LanguageService);
 
   showPassword = false;
 
@@ -28,19 +31,18 @@ export class RegisterComponent {
       next: (res: any) => {
         Swal.fire({
           icon: 'success',
-          title: '¡Tripulante registrado!',
-          text: `Revisa tu correo: ${res.email}`,
+          title: this.lang.t('register.okTitle'),
+          text: this.lang.t('register.okText', res.email),
           confirmButtonColor: '#111827'
         }).then(() => {
           this.router.navigate(['/login']);
         });
       },
       error: (err) => {
-        // Muestra el mensaje de error de la API (ej: usuario ya existe)
         Swal.fire({
           icon: 'error',
-          title: 'Error en el registro',
-          text: err.error.message || 'No se pudo registrar',
+          title: this.lang.t('register.error'),
+          text: err.error?.message || err.error || 'Error',
           confirmButtonColor: '#111827'
         });
       }

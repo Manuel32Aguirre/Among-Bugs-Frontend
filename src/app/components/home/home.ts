@@ -4,11 +4,13 @@ import { Router, RouterLink } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
 import { RoomService } from '../../services/room.service';
+import { LanguageService } from '../../services/language.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -16,6 +18,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private roomService = inject(RoomService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private lang = inject(LanguageService);
 
   rooms: any[] = [];
   loading = true;
@@ -52,7 +55,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (state) => this.router.navigate(['/room', state.code]),
       error: (err) => {
         this.joiningCode = null;
-        Swal.fire('No se pudo unir', err.error?.message || 'Sala no disponible', 'error');
+        Swal.fire(this.lang.t('home.joinError'), err.error?.message || 'Room unavailable', 'error');
       }
     });
   }

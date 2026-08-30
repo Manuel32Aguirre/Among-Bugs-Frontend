@@ -17,7 +17,6 @@ export class TriviaService {
    */
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
-      'Accept-Language': 'es-MX',
       'Authorization': `Bearer ${this.authService.getToken()}`
     });
   }
