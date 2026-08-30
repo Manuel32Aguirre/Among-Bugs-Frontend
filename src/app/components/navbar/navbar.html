@@ -11,7 +11,7 @@
     </div>
 
     <ng-container *ngIf="isLoggedIn">
-      <a class="nav-cta" routerLink="/rooms/create">{{ 'nav.createRoom' | t }}</a>
+      <a class="nav-cta" routerLink="/rooms/create" *ngIf="!auth.isGuest()">{{ 'nav.createRoom' | t }}</a>
       <div class="user-pill">
         <i class="bi bi-person-fill"></i>
         {{ username || ('nav.crew' | t) }}

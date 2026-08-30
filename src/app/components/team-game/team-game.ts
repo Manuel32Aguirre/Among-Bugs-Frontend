@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth';
 import { RoomService } from '../../services/room.service';
 import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { apiErrorMessage } from '../../utils/api-error';
 import { environment } from '../../../environments/environment';
 
 const MIN_PLAYERS = 3;
@@ -45,11 +46,17 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   showEjectionOverlay = false;
   ratingScore = 0;
   rated = false;
+  joinUrl = '';
+  qrUrl = '';
   private roleTimer?: any;
   private ejectionTimer?: any;
+  private answerRevealTimer?: any;
   private beginPlayingSent = false;
   private ackEjectionSent = false;
+  private ackAnswerRevealSent = false;
+  private answerRevealFetched = false;
   private timerSub?: Subscription;
+  private tickSentForDeadline = 0;
 
   trickOptions = [
     { type: 'REDUCE_TIME', icon: '⏱️', label: 'Reducir tiempo', hint: 'Mitad de tiempo para todos' },
@@ -62,16 +69,21 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.code = (this.route.snapshot.paramMap.get('code') || '').toUpperCase();
     const playerId = this.auth.getPlayerId();
     if (!playerId) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/join', this.code]);
       return;
     }
+
+    this.joinUrl = `${window.location.origin}/join/${this.code}`;
+    this.qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(this.joinUrl)}`;
 
     this.roomService.connect(this.code, playerId, {
       onRoomUpdate: (state) => this.applyState(state),
       onPersonalQuestion: (question) => {
         this.myQuestion = question;
-        this.selectedAnswer = null;
-        this.answerLocked = false;
+        if (this.state?.status !== 'ANSWER_REVEAL') {
+          this.selectedAnswer = null;
+          this.answerLocked = false;
+        }
         this.syncTimer();
         this.cdr.detectChanges();
       },
@@ -87,7 +99,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
 
     this.roomService.getRoom(this.code).subscribe({
       next: (state) => this.applyState(state),
-      error: () => this.router.navigate(['/home'])
+      error: () => this.router.navigate([this.auth.isGuest() ? '/login' : '/home'])
     });
   }
 
@@ -95,6 +107,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.timerSub?.unsubscribe();
     clearTimeout(this.roleTimer);
     clearTimeout(this.ejectionTimer);
+    clearTimeout(this.answerRevealTimer);
     this.roomService.disconnect();
   }
 
@@ -115,9 +128,22 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.state = state;
     if (state.myQuestion) this.myQuestion = state.myQuestion;
     if (state.projectionQuestion) this.projectionQuestion = state.projectionQuestion;
+    if (state.status === 'ANSWER_REVEAL' && !state.myQuestion && this.myQuestion) {
+      this.myQuestion = {
+        ...this.myQuestion,
+        correctOptionIndex: state.correctOptionIndex,
+        displayStyle: 'NORMAL'
+      };
+    }
+    if (state.status === 'PLAYING' && prevStatus === 'ANSWER_REVEAL') {
+      this.selectedAnswer = null;
+      this.answerLocked = false;
+      this.myQuestion = state.myQuestion || null;
+    }
     this.syncAnswerLock();
     this.syncTimer();
     this.handleRoleReveal(prevStatus);
+    this.handleAnswerReveal(prevStatus);
     this.handleEjectionReveal(prevStatus);
     if (state.status === 'PLAYING' && this.isTraitor && this.canApplyTrick && prevStatus === 'ROLE_REVEAL') {
       this.showTrickModal = true;
@@ -159,6 +185,35 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  private handleAnswerReveal(prevStatus: string): void {
+    if (this.state?.status === 'ANSWER_REVEAL') {
+      this.answerLocked = true;
+      this.ackAnswerRevealSent = false;
+      clearTimeout(this.answerRevealTimer);
+      const wait = Math.max(0, (this.state.answerRevealEndsAtMs || Date.now() + 5000) - Date.now());
+      this.answerRevealTimer = setTimeout(() => this.finishAnswerReveal(), wait || 5000);
+      if (!this.isHost && !this.isTraitor && !this.myQuestion && !this.answerRevealFetched) {
+        this.answerRevealFetched = true;
+        this.roomService.getRoom(this.code).subscribe({
+          next: (personal) => this.applyState(personal)
+        });
+      }
+    } else if (prevStatus === 'ANSWER_REVEAL') {
+      clearTimeout(this.answerRevealTimer);
+      this.answerRevealFetched = false;
+    }
+  }
+
+  private finishAnswerReveal(): void {
+    if (!this.ackAnswerRevealSent && this.state?.status === 'ANSWER_REVEAL') {
+      this.ackAnswerRevealSent = true;
+      this.roomService.ackAnswerReveal(this.code).subscribe({
+        next: (state) => this.applyState(state),
+        error: () => { this.ackAnswerRevealSent = false; }
+      });
+    }
+  }
+
   private handleEjectionReveal(prevStatus: string): void {
     if (this.state?.status === 'EJECTION_REVEAL') {
       this.showEjectionOverlay = true;
@@ -192,6 +247,10 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     return this.state?.hostPlayerId != null && this.state.hostPlayerId === playerId;
   }
 
+  get isGuest() {
+    return this.auth.isGuest() || !!this.myRole?.guest;
+  }
+
   get isTraitor() {
     return this.myRole?.role === 'TRAITOR';
   }
@@ -213,25 +272,24 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     return (this.state?.players?.length ?? 0) >= MIN_PLAYERS;
   }
 
-  get aliveCrew() {
-    return (this.state?.players || []).filter((p: any) => p.alive && p.role !== 'TRAITOR');
+  get isAnswerReveal() {
+    return this.state?.status === 'ANSWER_REVEAL';
   }
 
-  get deadPlayers() {
-    return (this.state?.players || []).filter((p: any) => !p.alive);
-  }
-
-  get traitorPlayer() {
-    return (this.state?.players || []).find((p: any) => p.role === 'TRAITOR');
+  get correctOptionIndex(): number | null {
+    return this.state?.correctOptionIndex
+      ?? this.myQuestion?.correctOptionIndex
+      ?? this.projectionQuestion?.correctOptionIndex
+      ?? null;
   }
 
   private syncAnswerLock(): void {
-    if (this.myRole?.answeredThisRound) this.answerLocked = true;
+    if (this.myRole?.answeredThisRound || this.isAnswerReveal) this.answerLocked = true;
     if (this.state?.status === 'VOTING' && this.state.currentRound !== this.lastVoteRound) {
       this.voteLocked = false;
       this.lastVoteRound = this.state.currentRound;
     }
-    if (this.state?.status === 'PLAYING' && !this.myRole?.answeredThisRound) {
+    if (this.state?.status === 'PLAYING' && !this.myRole?.answeredThisRound && !this.isTraitor) {
       this.answerLocked = false;
     }
   }
@@ -242,14 +300,38 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     });
   }
 
+  copyJoinLink(): void {
+    navigator.clipboard.writeText(this.joinUrl).then(() => {
+      Swal.fire({ icon: 'success', title: this.lang.t('game.linkCopied'), timer: 1000, showConfirmButton: false });
+    });
+  }
+
   startGame(): void {
     this.roomService.startRoom(this.code).subscribe({
-      error: (err) => Swal.fire('Error', err.error?.message, 'error')
+      error: (err) => Swal.fire('Error', apiErrorMessage(err), 'error')
+    });
+  }
+
+  cancelRoom(): void {
+    Swal.fire({
+      icon: 'warning',
+      title: this.lang.t('game.cancelRoom'),
+      text: this.lang.t('game.cancelRoomHint'),
+      showCancelButton: true,
+      confirmButtonText: this.lang.t('game.cancelConfirm'),
+      cancelButtonText: this.lang.t('game.cancelKeep'),
+      confirmButtonColor: '#ef4444'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.roomService.destroyRoom(this.code).subscribe({
+        next: () => this.router.navigate(['/home']),
+        error: (err) => Swal.fire('Error', apiErrorMessage(err), 'error')
+      });
     });
   }
 
   selectAnswer(optionIndex: number): void {
-    if (this.answerLocked || this.selectedAnswer !== null) return;
+    if (this.answerLocked || this.selectedAnswer !== null || this.isAnswerReveal) return;
     this.selectedAnswer = optionIndex;
     this.answerLocked = true;
     this.roomService.answer(this.code, optionIndex).subscribe({
@@ -257,18 +339,21 @@ export class TeamGameComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.answerLocked = false;
         this.selectedAnswer = null;
-        Swal.fire('Error', err.error?.message, 'error');
+        Swal.fire('Error', apiErrorMessage(err), 'error');
         this.cdr.detectChanges();
       }
     });
   }
 
   openTrickModal(): void {
-    if (this.canApplyTrick) this.showTrickModal = true;
+    if (!this.canApplyTrick) return;
+    this.showTrickModal = true;
+    this.cdr.detectChanges();
   }
 
   closeTrickModal(): void {
     this.showTrickModal = false;
+    this.cdr.detectChanges();
   }
 
   applyGlobalTrick(trickType: string): void {
@@ -277,8 +362,9 @@ export class TeamGameComponent implements OnInit, OnDestroy {
       next: () => {
         this.showTrickModal = false;
         Swal.fire({ icon: 'success', title: this.lang.t('game.trickOn'), timer: 1200, showConfirmButton: false });
+        this.cdr.detectChanges();
       },
-      error: (err) => Swal.fire('Error', err.error?.message, 'error')
+      error: (err) => Swal.fire('Error', apiErrorMessage(err), 'error')
     });
   }
 
@@ -288,7 +374,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.roomService.vote(this.code, targetPlayerId, false).subscribe({
       error: (err) => {
         this.voteLocked = false;
-        Swal.fire('Error', err.error?.message, 'error');
+        Swal.fire('Error', apiErrorMessage(err), 'error');
       }
     });
   }
@@ -299,7 +385,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.roomService.vote(this.code, null, true).subscribe({
       error: (err) => {
         this.voteLocked = false;
-        Swal.fire('Error', err.error?.message, 'error');
+        Swal.fire('Error', apiErrorMessage(err), 'error');
       }
     });
   }
@@ -313,14 +399,24 @@ export class TeamGameComponent implements OnInit, OnDestroy {
       if (this.projectionQuestion) {
         this.projectionTime = Math.max(0, Math.ceil((this.projectionQuestion.questionDeadlineMs - Date.now()) / 1000));
       }
+      if (this.state?.status === 'PLAYING' && this.state.roundDeadlineMs) {
+        const left = this.state.roundDeadlineMs - Date.now();
+        if (left <= 0 && this.tickSentForDeadline !== this.state.roundDeadlineMs) {
+          this.tickSentForDeadline = this.state.roundDeadlineMs;
+          this.roomService.tickRound(this.code).subscribe({
+            next: (state) => this.applyState(state)
+          });
+        }
+      }
       this.cdr.markForCheck();
     };
-    if (!this.myQuestion && !this.projectionQuestion) return;
+    if (!this.myQuestion && !this.projectionQuestion && this.state?.status !== 'PLAYING') return;
     tick();
     this.timerSub = interval(250).subscribe(tick);
   }
 
   getProjectionClass(): string {
+    if (this.isAnswerReveal) return '';
     const style = this.projectionQuestion?.displayStyle ?? 'NORMAL';
     if (style === 'UPSIDE_DOWN') return 'upside-down';
     if (style === 'REVERSED') return 'reversed';
@@ -328,14 +424,24 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   }
 
   getDisplayClass(): string {
+    if (this.isAnswerReveal) return '';
     const style = this.myQuestion?.displayStyle ?? 'NORMAL';
     if (style === 'UPSIDE_DOWN') return 'upside-down';
     if (style === 'REVERSED') return 'reversed';
     return '';
   }
 
+  optionClass(optIndex: number, selected: number | null): Record<string, boolean> {
+    const correct = this.correctOptionIndex;
+    return {
+      selected: selected === optIndex && !this.isAnswerReveal,
+      correct: this.isAnswerReveal && correct === optIndex,
+      dimmed: this.isAnswerReveal && correct !== null && correct !== optIndex
+    };
+  }
+
   submitRating(score: number): void {
-    if (this.rated || !this.state?.triviaId) return;
+    if (this.rated || !this.state?.triviaId || this.isGuest) return;
     this.ratingScore = score;
     this.http.post(`${environment.apiBaseUrl}/ratings/trivia/${this.state.triviaId}`, { score }).subscribe({
       next: () => {
@@ -343,11 +449,17 @@ export class TeamGameComponent implements OnInit, OnDestroy {
         Swal.fire({ icon: 'success', title: this.lang.t('game.thanks'), timer: 1200, showConfirmButton: false });
         this.cdr.detectChanges();
       },
-      error: (err) => Swal.fire('Error', err.error?.message || 'No se pudo calificar', 'error')
+      error: (err) => Swal.fire('Error', apiErrorMessage(err, 'No se pudo calificar'), 'error')
     });
   }
 
   leaveRoom(): void {
+    this.roomService.disconnect();
+    if (this.isGuest) {
+      this.auth.clearSession();
+      this.router.navigate(['/login']);
+      return;
+    }
     this.router.navigate(['/home']);
   }
 }

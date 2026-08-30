@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import Swal from 'sweetalert2';
+import { apiErrorMessage } from '../../utils/api-error';
 import { RoomService } from '../../services/room.service';
 import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
@@ -55,7 +56,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       next: (state) => this.router.navigate(['/room', state.code]),
       error: (err) => {
         this.joiningCode = null;
-        Swal.fire(this.lang.t('home.joinError'), err.error?.message || 'Room unavailable', 'error');
+        Swal.fire(this.lang.t('home.joinError'), apiErrorMessage(err, 'Room unavailable'), 'error');
       }
     });
   }

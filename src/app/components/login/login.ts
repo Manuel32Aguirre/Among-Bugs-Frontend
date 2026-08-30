@@ -5,6 +5,7 @@ import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { Router, RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
+import { apiErrorMessage } from '../../utils/api-error';
 
 @Component({
   selector: 'app-login',
@@ -46,7 +47,7 @@ export class LoginComponent {
         Swal.fire({
           icon: 'error',
           title: this.lang.t('common.error'),
-          text: err.error?.message || 'Error',
+          text: apiErrorMessage(err, this.lang.t('common.error')),
           confirmButtonColor: '#111827'
         });
       }

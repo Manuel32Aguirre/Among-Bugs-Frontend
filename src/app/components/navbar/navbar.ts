@@ -18,6 +18,7 @@ import { environment } from '../../../environments/environment';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
+  readonly auth = this.authService;
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private http = inject(HttpClient);
@@ -51,12 +52,33 @@ export class NavbarComponent implements OnInit, OnDestroy {
   checkAndLoadProfile(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
 
+    if (this.isLoggedIn && this.authService.isGuest()) {
+      const token = this.authService.getToken();
+      const payload = token ? this.decodeGuest(token) : null;
+      this.username = payload?.username || 'Invitado';
+      this.userEmail = '';
+      this.cdr.detectChanges();
+      return;
+    }
+
     if (this.isLoggedIn) {
       this.loadUserProfile();
     } else {
       this.username = '';
       this.userEmail = '';
       this.cdr.detectChanges();
+    }
+  }
+
+  private decodeGuest(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(decodeURIComponent(atob(base64).split('').map(c =>
+        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')));
+    } catch {
+      return null;
     }
   }
 

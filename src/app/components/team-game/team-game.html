@@ -52,21 +52,38 @@
     <div class="code-display">
       <span>{{ 'game.code' | t }}</span>
       <strong>{{ state.code }}</strong>
-      <button (click)="copyCode()">{{ 'game.copy' | t }}</button>
+      <button type="button" (click)="copyCode()">{{ 'game.copy' | t }}</button>
     </div>
+
+    <div class="qr-block">
+      <p class="qr-title">{{ 'game.guestQr' | t }}</p>
+      <img [src]="qrUrl" [alt]="'game.guestQr' | t" width="180" height="180" />
+      <p class="muted qr-hint">{{ 'game.guestQrHint' | t }}</p>
+      <button type="button" class="ghost-btn" (click)="copyJoinLink()">{{ 'game.copyLink' | t }}</button>
+    </div>
+
     <h2>{{ 'game.crewCount' | t: state.players.length }}</h2>
     <p class="muted">{{ 'game.minPlayers' | t: minPlayers }}</p>
     <ul class="player-list">
-      <li *ngFor="let p of state.players"><span class="dot"></span>{{ p.username }}</li>
+      <li *ngFor="let p of state.players">
+        <span class="dot"></span>{{ p.username }}
+        <em *ngIf="p.guest" class="guest-tag">{{ 'game.guestTag' | t }}</em>
+      </li>
     </ul>
-    <button class="btn-glow" (click)="startGame()" [disabled]="!canStartGame">{{ 'game.start' | t }}</button>
+    <div class="host-actions">
+      <button class="btn-glow" type="button" (click)="startGame()" [disabled]="!canStartGame">{{ 'game.start' | t }}</button>
+      <button class="btn-cancel" type="button" (click)="cancelRoom()">{{ 'game.cancelRoom' | t }}</button>
+    </div>
   </section>
 
   <section *ngIf="state.status === 'LOBBY' && !isHost" class="panel">
     <div class="code-display compact"><strong>{{ state.code }}</strong></div>
     <h2>{{ 'game.waitingHost' | t }}</h2>
     <ul class="player-list">
-      <li *ngFor="let p of state.players"><span class="dot"></span>{{ p.username }}</li>
+      <li *ngFor="let p of state.players">
+        <span class="dot"></span>{{ p.username }}
+        <em *ngIf="p.guest" class="guest-tag">{{ 'game.guestTag' | t }}</em>
+      </li>
     </ul>
   </section>
 
@@ -74,15 +91,23 @@
     <div class="players-strip">
       <div *ngFor="let p of state.players" class="chip" [class.dead]="!p.alive">
         <strong>{{ p.username }}</strong>
-        <span *ngIf="p.answeredThisRound && state.status === 'PLAYING'">✓</span>
+        <span *ngIf="p.answeredThisRound && (state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL')">✓</span>
       </div>
     </div>
+    <p class="answer-count" *ngIf="state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL'">
+      {{ 'game.answeredCount' | t: state.answeredCount: state.expectedAnswerCount }}
+    </p>
     <div *ngIf="projectionQuestion" class="projection">
-      <div class="timer">{{ projectionTime }}s</div>
-      <p class="round-label">{{ 'game.projectionQ' | t: state.currentRound }}</p>
+      <div class="timer" *ngIf="!isAnswerReveal">{{ projectionTime }}s</div>
+      <p class="round-label" *ngIf="!isAnswerReveal">{{ 'game.projectionQ' | t: state.currentRound }}</p>
+      <p class="round-label reveal-label" *ngIf="isAnswerReveal">{{ 'game.correctReveal' | t }}</p>
       <h2 [ngClass]="getProjectionClass()">{{ projectionQuestion.displayText }}</h2>
       <ul class="proj-opts">
-        <li *ngFor="let opt of projectionQuestion.options">{{ opt.text }}</li>
+        <li *ngFor="let opt of projectionQuestion.options"
+            [class.correct]="isAnswerReveal && correctOptionIndex === opt.index"
+            [class.dimmed]="isAnswerReveal && correctOptionIndex !== null && correctOptionIndex !== opt.index">
+          {{ opt.text }}
+        </li>
       </ul>
     </div>
     <p class="muted" *ngIf="state.status === 'VOTING'">{{ 'game.votingNow' | t }}</p>
@@ -91,29 +116,36 @@
     </p>
   </section>
 
-  <section *ngIf="!isHost && !isDead && state.status === 'PLAYING' && isTraitor && !showRoleOverlay" class="panel traitor-panel">
+  <section *ngIf="!isHost && !isDead && (state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL') && isTraitor && !showRoleOverlay" class="panel traitor-panel">
     <div class="badge-traitor">{{ 'game.traitorBadge' | t }}</div>
     <h2>{{ 'game.sabotage' | t }}</h2>
     <p class="muted">{{ 'game.sabotageHint' | t }}</p>
-    <p class="trick-count">{{ 'game.tricksLeft' | t: tricksRemaining }}</p>
-    <button class="btn-glow danger" (click)="openTrickModal()" [disabled]="!canApplyTrick">{{ 'game.openTricks' | t }}</button>
+    <p class="answer-count">{{ 'game.answeredCount' | t: state.answeredCount: state.expectedAnswerCount }}</p>
+    <p class="trick-count" *ngIf="!isAnswerReveal">{{ 'game.tricksLeft' | t: tricksRemaining }}</p>
+    <button class="btn-glow danger" type="button" (click)="openTrickModal()" [disabled]="!canApplyTrick || isAnswerReveal">
+      {{ 'game.openTricks' | t }}
+    </button>
+    <p class="reveal-banner" *ngIf="isAnswerReveal">{{ 'game.correctReveal' | t }}</p>
   </section>
 
-  <section *ngIf="!isHost && !isDead && state.status === 'PLAYING' && !isTraitor && !showRoleOverlay" class="panel play-panel">
-    <div *ngIf="!myQuestion && !answerLocked" class="waiting">
+  <section *ngIf="!isHost && !isDead && (state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL') && !isTraitor && !showRoleOverlay" class="panel play-panel">
+    <p class="answer-count">{{ 'game.answeredCount' | t: state.answeredCount: state.expectedAnswerCount }}</p>
+    <div *ngIf="!myQuestion && !answerLocked && !isAnswerReveal" class="waiting">
       <div class="spinner"></div>
       <p>{{ 'game.loadingQ' | t }}</p>
     </div>
-    <div *ngIf="answerLocked && !myQuestion" class="waiting ok">{{ 'game.answeredWait' | t }}</div>
+    <div *ngIf="answerLocked && !myQuestion && !isAnswerReveal" class="waiting ok">{{ 'game.answeredWait' | t }}</div>
     <div *ngIf="myQuestion" class="question">
-      <div class="timer">{{ questionTime }}s</div>
+      <div class="timer" *ngIf="!isAnswerReveal">{{ questionTime }}s</div>
+      <p class="reveal-banner" *ngIf="isAnswerReveal">{{ 'game.correctReveal' | t }}</p>
       <h2 [ngClass]="getDisplayClass()">{{ myQuestion.displayText }}</h2>
-      <p class="trick-msg" *ngIf="myQuestion.trickMessage">{{ myQuestion.trickMessage }}</p>
+      <p class="trick-msg" *ngIf="myQuestion.trickMessage && !isAnswerReveal">{{ myQuestion.trickMessage }}</p>
       <div class="options">
         <button *ngFor="let opt of myQuestion.options"
+                type="button"
                 class="option-btn"
-                [class.selected]="selectedAnswer === opt.index"
-                [disabled]="answerLocked"
+                [ngClass]="optionClass(opt.index, selectedAnswer)"
+                [disabled]="answerLocked || isAnswerReveal"
                 (click)="selectAnswer(opt.index)">
           {{ opt.text }}
         </button>
@@ -125,12 +157,12 @@
     <h2>{{ 'game.vote' | t }}</h2>
     <p class="muted">{{ 'game.voteHint' | t }}</p>
     <div class="vote-grid">
-      <button *ngFor="let tally of state.voteTally" class="vote-card" [disabled]="voteLocked" (click)="vote(tally.targetPlayerId)">
+      <button *ngFor="let tally of state.voteTally" type="button" class="vote-card" [disabled]="voteLocked" (click)="vote(tally.targetPlayerId)">
         <strong>{{ tally.username }}</strong>
         <span>{{ tally.votes }}</span>
       </button>
     </div>
-    <button class="btn-skip" [disabled]="voteLocked" (click)="skipVote()">{{ 'game.skipVote' | t: (state.skipVotes || 0) }}</button>
+    <button type="button" class="btn-skip" [disabled]="voteLocked" (click)="skipVote()">{{ 'game.skipVote' | t: (state.skipVotes || 0) }}</button>
   </section>
 
   <section *ngIf="state.status === 'FINISHED'" class="panel finish-panel">
@@ -146,26 +178,26 @@
       </div>
     </div>
 
-    <div class="rating-box" *ngIf="!isHost">
+    <div class="rating-box" *ngIf="!isHost && !isGuest">
       <p>{{ 'game.rate' | t }}</p>
       <div class="stars">
         <button type="button" *ngFor="let s of [1,2,3,4,5]" (click)="submitRating(s)" [class.on]="ratingScore >= s" [disabled]="rated">★</button>
       </div>
     </div>
 
-    <button class="btn-glow" (click)="leaveRoom()">{{ 'game.backLobby' | t }}</button>
+    <button type="button" class="btn-glow" (click)="leaveRoom()">{{ 'game.backLobby' | t }}</button>
   </section>
 
-  <div class="modal-back" *ngIf="showTrickModal" (click)="closeTrickModal()">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <button class="close" (click)="closeTrickModal()">×</button>
+  <div class="trick-modal-back" *ngIf="showTrickModal" (click)="closeTrickModal()">
+    <div class="trick-modal" (click)="$event.stopPropagation()">
+      <button type="button" class="trick-close" (click)="closeTrickModal()">×</button>
       <h3>{{ 'game.trickGlobal' | t }}</h3>
       <p class="muted">{{ 'game.trickAll' | t }}</p>
       <div class="trick-grid">
-        <button *ngFor="let t of trickOptions" (click)="applyGlobalTrick(t.type)">
-          <span>{{ t.icon }}</span>
-          <strong>{{ t.label }}</strong>
-          <small>{{ t.hint }}</small>
+        <button type="button" *ngFor="let trick of trickOptions" (click)="applyGlobalTrick(trick.type)">
+          <span>{{ trick.icon }}</span>
+          <strong>{{ trick.label }}</strong>
+          <small>{{ trick.hint }}</small>
         </button>
       </div>
     </div>

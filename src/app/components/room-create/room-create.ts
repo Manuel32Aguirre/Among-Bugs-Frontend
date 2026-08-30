@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
+import { apiErrorMessage } from '../../utils/api-error';
 import { RoomService } from '../../services/room.service';
 import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
@@ -112,7 +113,7 @@ export class RoomCreateComponent {
       error: (err) => {
         this.submitting = false;
         this.cdr.detectChanges();
-        Swal.fire(this.lang.t('common.error'), err.error?.message || this.lang.t('create.error'), 'error');
+        Swal.fire(this.lang.t('common.error'), apiErrorMessage(err, this.lang.t('create.error')), 'error');
       }
     });
   }

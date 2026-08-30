@@ -56,6 +56,14 @@ export class AuthService {
       this.playerIdSubject.next(payload.sub);
       sessionStorage.setItem('playerId', payload.sub);
     }
+    const guest = payload?.guest === true || (payload?.sub != null && Number(payload.sub) < 0);
+    sessionStorage.setItem('isGuest', guest ? '1' : '0');
+  }
+
+  isGuest(): boolean {
+    if (sessionStorage.getItem('isGuest') === '1') return true;
+    const id = this.getPlayerId();
+    return !!id && Number(id) < 0;
   }
 
   getToken(): string | null {
@@ -75,6 +83,7 @@ export class AuthService {
     this.playerIdSubject.next(null);
     sessionStorage.removeItem('authToken');
     sessionStorage.removeItem('playerId');
+    sessionStorage.removeItem('isGuest');
   }
 
   private decodeJWT(token: string): any {

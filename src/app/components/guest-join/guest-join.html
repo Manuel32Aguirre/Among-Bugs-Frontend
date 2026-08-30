@@ -1,0 +1,18 @@
+<section class="guest-wrap">
+  <div class="guest-card">
+    <p class="eyebrow">{{ 'guest.eyebrow' | t }}</p>
+    <h1>{{ 'guest.title' | t: code }}</h1>
+    <p class="lead">{{ 'guest.lead' | t }}</p>
+
+    <label>
+      <span>{{ 'guest.name' | t }}</span>
+      <input [(ngModel)]="username" maxlength="25" [placeholder]="'guest.namePh' | t" (keyup.enter)="join()" />
+    </label>
+
+    <button class="btn" type="button" (click)="join()" [disabled]="submitting">
+      {{ submitting ? ('guest.joining' | t) : ('guest.join' | t) }}
+    </button>
+
+    <a routerLink="/login" class="login-link">{{ 'guest.hasAccount' | t }}</a>
+  </div>
+</section>

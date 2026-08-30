@@ -7,6 +7,7 @@ import { VerifyExpiredComponent } from './components/verify-expired/verify-expir
 import { HomeComponent } from './components/home/home';
 import { RoomCreateComponent } from './components/room-create/room-create';
 import { TeamGameComponent } from './components/team-game/team-game';
+import { GuestJoinComponent } from './components/guest-join/guest-join';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -16,6 +17,7 @@ export const routes: Routes = [
   { path: 'verify/success', component: VerifySuccessComponent },
   { path: 'verify/error', component: VerifyErrorComponent },
   { path: 'verify/expired', component: VerifyExpiredComponent },
+  { path: 'join/:code', component: GuestJoinComponent },
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'rooms/create', component: RoomCreateComponent, canActivate: [authGuard] },
   { path: 'room/:code', component: TeamGameComponent, canActivate: [authGuard] },

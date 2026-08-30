@@ -29,6 +29,14 @@ export class RoomService {
     return this.http.post<any>(`${this.baseUrl}/join`, { code });
   }
 
+  guestJoin(code: string, username: string) {
+    return this.http.post<any>(`${this.baseUrl}/guest-join`, { code, username });
+  }
+
+  destroyRoom(code: string) {
+    return this.http.delete(`${this.baseUrl}/${code}`);
+  }
+
   getRoom(code: string) {
     return this.http.get<any>(`${this.baseUrl}/${code}`);
   }
@@ -43,6 +51,14 @@ export class RoomService {
 
   answer(code: string, optionIndex: number) {
     return this.http.post<any>(`${this.baseUrl}/${code}/answer`, { optionIndex });
+  }
+
+  ackAnswerReveal(code: string) {
+    return this.http.post<any>(`${this.baseUrl}/${code}/ack-answer-reveal`, {});
+  }
+
+  tickRound(code: string) {
+    return this.http.post<any>(`${this.baseUrl}/${code}/tick`, {});
   }
 
   applyTrick(code: string, trickType: string) {

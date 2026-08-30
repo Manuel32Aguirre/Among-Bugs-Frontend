@@ -27,8 +27,9 @@ export class App {
   }
 
   private checkRoute(url: string): void {
-    // No mostrar navbar en login, registro y páginas de verificación
+    const path = url.split('?')[0];
     const hideNavbarRoutes = ['/login', '/register', '/verify/success', '/verify/expired', '/verify/error'];
-    this.showNavbar = !hideNavbarRoutes.includes(url);
+    const isJoin = path.startsWith('/join/');
+    this.showNavbar = !hideNavbarRoutes.includes(path) && !isJoin;
   }
 }

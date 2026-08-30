@@ -5,6 +5,7 @@ import { LanguageService } from '../../services/language.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { Router, RouterLink } from '@angular/router';
 import Swal from 'sweetalert2';
+import { apiErrorMessage } from '../../utils/api-error';
 
 @Component({
   selector: 'app-register',
@@ -42,7 +43,7 @@ export class RegisterComponent {
         Swal.fire({
           icon: 'error',
           title: this.lang.t('register.error'),
-          text: err.error?.message || err.error || 'Error',
+          text: apiErrorMessage(err, this.lang.t('register.error')),
           confirmButtonColor: '#111827'
         });
       }
