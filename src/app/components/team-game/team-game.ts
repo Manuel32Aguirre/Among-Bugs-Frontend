@@ -263,12 +263,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   }
 
   get canApplyTrick() {
-    return this.isTraitor && this.myRole?.alive && this.state?.status === 'PLAYING'
-      && (this.state?.canApplyTrick ?? false);
-  }
-
-  get tricksRemaining() {
-    return this.state?.tricksRemaining ?? 0;
+    return this.isTraitor && this.myRole?.alive && this.state?.status === 'PLAYING';
   }
 
   get canStartGame() {
@@ -483,12 +478,29 @@ export class TeamGameComponent implements OnInit, OnDestroy {
   }
 
   leaveRoom(): void {
-    this.roomService.disconnect();
-    if (this.isGuest) {
-      this.auth.clearSession();
-      this.router.navigate(['/login']);
+    const exit = () => {
+      this.roomService.disconnect();
+      if (this.isGuest) {
+        this.auth.clearSession();
+        this.router.navigate(['/login']);
+        return;
+      }
+      this.router.navigate(['/home']);
+    };
+
+    const inGame = this.state
+      && this.state.status !== 'LOBBY'
+      && this.state.status !== 'FINISHED'
+      && !this.isHost;
+
+    if (!inGame) {
+      exit();
       return;
     }
-    this.router.navigate(['/home']);
+
+    this.roomService.leaveRoom(this.code).subscribe({
+      next: () => exit(),
+      error: () => exit()
+    });
   }
 }

@@ -99,15 +99,12 @@
       <div class="score-bar-track">
         <div class="score-bar-fill" [style.width]="scoreBarWidth"></div>
       </div>
-      <p class="score-meter-hint" *ngIf="contributionPerCorrect > 0">
-        {{ 'game.contributionHint' | t: contributionPerCorrect }}
-      </p>
+      <p class="score-meter-hint">{{ 'game.contributionHint' | t }}</p>
     </div>
 
     <div class="players-strip">
       <div *ngFor="let p of state.players" class="chip" [class.dead]="!p.alive">
         <strong>{{ p.username }}</strong>
-        <span class="chip-score" *ngIf="p.playerId !== state.traitorPlayerId && p.alive">+{{ p.score }}</span>
         <span *ngIf="p.answeredThisRound && (state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL')">✓</span>
       </div>
     </div>
@@ -138,7 +135,6 @@
     <h2>{{ 'game.sabotage' | t }}</h2>
     <p class="muted">{{ 'game.sabotageHint' | t }}</p>
     <p class="answer-count">{{ 'game.answeredCount' | t: state.answeredCount: state.expectedAnswerCount }}</p>
-    <p class="trick-count" *ngIf="!isAnswerReveal">{{ 'game.tricksLeft' | t: tricksRemaining }}</p>
     <button class="btn-glow danger" type="button" (click)="openTrickModal()" [disabled]="!canApplyTrick || isAnswerReveal">
       {{ 'game.openTricks' | t }}
     </button>

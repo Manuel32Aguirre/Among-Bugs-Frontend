@@ -37,6 +37,10 @@ export class RoomService {
     return this.http.delete(`${this.baseUrl}/${code}`);
   }
 
+  leaveRoom(code: string) {
+    return this.http.post(`${this.baseUrl}/${code}/leave`, {});
+  }
+
   getRoom(code: string) {
     return this.http.get<any>(`${this.baseUrl}/${code}`);
   }
