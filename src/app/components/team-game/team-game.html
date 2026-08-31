@@ -88,9 +88,26 @@
   </section>
 
   <section *ngIf="isHost && state.status !== 'LOBBY' && state.status !== 'FINISHED' && !showRoleOverlay && !showEjectionOverlay" class="panel host-projector">
+    <div class="score-meter" *ngIf="state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL' || state.status === 'VOTING'">
+      <p class="score-meter-label">{{ 'game.scoreMeter' | t }}</p>
+      <div class="score-meter-values">
+        <span class="score-current">{{ state.teamScore }}</span>
+        <span class="score-sep">/</span>
+        <span class="score-target">{{ state.targetScore }}</span>
+        <span class="score-percent">{{ teamScorePercent }}%</span>
+      </div>
+      <div class="score-bar-track">
+        <div class="score-bar-fill" [style.width]="scoreBarWidth"></div>
+      </div>
+      <p class="score-meter-hint" *ngIf="contributionPerCorrect > 0">
+        {{ 'game.contributionHint' | t: contributionPerCorrect }}
+      </p>
+    </div>
+
     <div class="players-strip">
       <div *ngFor="let p of state.players" class="chip" [class.dead]="!p.alive">
         <strong>{{ p.username }}</strong>
+        <span class="chip-score" *ngIf="p.playerId !== state.traitorPlayerId && p.alive">+{{ p.score }}</span>
         <span *ngIf="p.answeredThisRound && (state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL')">✓</span>
       </div>
     </div>
@@ -129,15 +146,21 @@
   </section>
 
   <section *ngIf="!isHost && !isDead && (state.status === 'PLAYING' || state.status === 'ANSWER_REVEAL') && !isTraitor && !showRoleOverlay" class="panel play-panel">
-    <p class="answer-count">{{ 'game.answeredCount' | t: state.answeredCount: state.expectedAnswerCount }}</p>
-    <div *ngIf="!myQuestion && !answerLocked && !isAnswerReveal" class="waiting">
+    <p class="answer-count" *ngIf="!isCrewWaitingRound">{{ 'game.answeredCount' | t: state.answeredCount: state.expectedAnswerCount }}</p>
+
+    <div *ngIf="isCrewWaitingRound" class="waiting-panel">
+      <div class="spinner large"></div>
+      <h2>{{ 'game.waitingCrew' | t }}</h2>
+      <p class="muted">{{ 'game.answeredWait' | t }}</p>
+    </div>
+
+    <div *ngIf="!isCrewWaitingRound && !myQuestion && !answerLocked" class="waiting">
       <div class="spinner"></div>
       <p>{{ 'game.loadingQ' | t }}</p>
     </div>
-    <div *ngIf="answerLocked && !myQuestion && !isAnswerReveal" class="waiting ok">{{ 'game.answeredWait' | t }}</div>
-    <div *ngIf="myQuestion" class="question">
+
+    <div *ngIf="!isCrewWaitingRound && myQuestion" class="question">
       <div class="timer" *ngIf="!isAnswerReveal">{{ questionTime }}s</div>
-      <p class="reveal-banner" *ngIf="isAnswerReveal">{{ 'game.correctReveal' | t }}</p>
       <h2 [ngClass]="getDisplayClass()">{{ myQuestion.displayText }}</h2>
       <p class="trick-msg" *ngIf="myQuestion.trickMessage && !isAnswerReveal">{{ myQuestion.trickMessage }}</p>
       <div class="options">

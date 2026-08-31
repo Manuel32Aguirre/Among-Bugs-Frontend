@@ -128,6 +128,9 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     this.state = state;
     if (state.myQuestion) this.myQuestion = state.myQuestion;
     if (state.projectionQuestion) this.projectionQuestion = state.projectionQuestion;
+    if (this.isCrewWaitingRound) {
+      this.myQuestion = null;
+    }
     if (state.status === 'ANSWER_REVEAL' && !state.myQuestion && this.myQuestion) {
       this.myQuestion = {
         ...this.myQuestion,
@@ -276,6 +279,28 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     return this.state?.status === 'ANSWER_REVEAL';
   }
 
+  get isCrewWaitingRound() {
+    return !this.isHost && !this.isTraitor && !this.isDead
+      && (this.state?.status === 'PLAYING' || this.state?.status === 'ANSWER_REVEAL')
+      && !!this.myRole?.answeredThisRound;
+  }
+
+  get teamScorePercent(): number {
+    if (this.state?.teamScorePercent != null) {
+      return this.state.teamScorePercent;
+    }
+    const target = this.state?.targetScore || 1;
+    return Math.min(100, Math.floor((this.state?.teamScore || 0) * 100 / target));
+  }
+
+  get scoreBarWidth(): string {
+    return `${Math.min(100, this.teamScorePercent)}%`;
+  }
+
+  get contributionPerCorrect(): number {
+    return this.state?.contributionPerCorrect ?? 0;
+  }
+
   get correctOptionIndex(): number | null {
     return this.state?.correctOptionIndex
       ?? this.myQuestion?.correctOptionIndex
@@ -338,6 +363,7 @@ export class TeamGameComponent implements OnInit, OnDestroy {
     if (this.answerLocked || this.selectedAnswer !== null || this.isAnswerReveal) return;
     this.selectedAnswer = optionIndex;
     this.answerLocked = true;
+    this.myQuestion = null;
     this.roomService.answer(this.code, optionIndex).subscribe({
       next: (state) => this.applyState(state),
       error: (err) => {

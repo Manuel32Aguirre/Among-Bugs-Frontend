@@ -209,8 +209,95 @@
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
   font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 .chip.dead { opacity: 0.45; filter: grayscale(1); }
+.chip-score {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #4ade80;
+}
+
+.score-meter {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.18));
+  border: 2px solid rgba(56,189,248,0.45);
+  text-align: center;
+  box-shadow: 0 0 40px rgba(56,189,248,0.15);
+}
+.score-meter-label {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #67e8f9;
+}
+.score-meter-values {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+.score-current {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 900;
+  color: #f8fafc;
+  line-height: 1;
+}
+.score-sep, .score-target {
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: #64748b;
+}
+.score-percent {
+  margin-left: 0.5rem;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 900;
+  color: #38bdf8;
+}
+.score-bar-track {
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(148,163,184,0.25);
+  overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0ea5e9, #6366f1, #4ade80);
+  transition: width 0.45s ease;
+  box-shadow: 0 0 20px rgba(56,189,248,0.5);
+}
+.score-meter-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.waiting-panel {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1rem;
+  border-radius: 18px;
+  background: rgba(15,23,42,0.6);
+  border: 1px dashed rgba(56,189,248,0.35);
+}
+.waiting-panel h2 {
+  margin: 1rem 0 0.35rem;
+  font-size: 1.35rem;
+  color: #e2e8f0;
+}
 
 .projection, .question { text-align: center; }
 .timer {
@@ -290,6 +377,11 @@
   border: 3px solid #334155;
   border-top-color: #38bdf8;
   animation: spin 0.8s linear infinite;
+}
+.spinner.large {
+  width: 56px;
+  height: 56px;
+  border-width: 5px;
 }
 
 .trick-msg { color: #fbbf24; font-weight: 700; }
