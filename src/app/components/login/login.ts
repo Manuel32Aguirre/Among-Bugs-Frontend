@@ -28,9 +28,7 @@ export class LoginComponent {
 
   onLogin() {
     this.authService.login(this.loginData).subscribe({
-      next: (res: any) => {
-        this.authService.saveToken(res.token);
-
+      next: () => {
         Swal.fire({
           icon: 'success',
           title: this.lang.t('login.welcome'),

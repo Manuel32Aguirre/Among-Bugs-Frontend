@@ -5,26 +5,25 @@ import Swal from 'sweetalert2';
 @Component({
   selector: 'app-verify-success',
   standalone: true,
-  template: '', // No necesitamos HTML, Swal se encarga de todo
+  template: '',
 })
 export class VerifySuccessComponent implements OnInit {
 
   constructor(private router: Router) {}
 
   ngOnInit() {
-    this.mostrarAlerta();
+    this.showAlert();
   }
 
-  mostrarAlerta() {
+  showAlert() {
     Swal.fire({
-      title: '¡Cuenta Activada!',
+      title: '¡Cuenta activada!',
       text: 'Tu correo ha sido verificado con éxito.',
       icon: 'success',
-      confirmButtonText: 'Ir al Inicio de Sesión',
-      confirmButtonColor: '#764ba2', // El color moradito de tu gradiente
+      confirmButtonText: 'Ir al inicio de sesión',
+      confirmButtonColor: '#764ba2',
       allowOutsideClick: false,
       background: '#ffffff',
-      // Esto simula un poco el estilo de tu card
       customClass: {
         popup: 'border-radius-20'
       }

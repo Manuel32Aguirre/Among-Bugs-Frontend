@@ -1,4 +1,3 @@
-/** Copia al portapapeles; funciona en HTTP (EC2) con fallback execCommand. */
 export async function copyToClipboard(text: string): Promise<void> {
   if (navigator.clipboard?.writeText && window.isSecureContext) {
     await navigator.clipboard.writeText(text);

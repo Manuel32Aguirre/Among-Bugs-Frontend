@@ -48,6 +48,6 @@
   </div>
 
   <button type="button" class="btn-glow wide" (click)="create()" [disabled]="submitting">
-    {{ submitting ? ('create.submitting' | t) : ('create.submit' | t) }}
+    {{ submitting ? (mode === 'ai' ? ('create.generating' | t) : ('create.submitting' | t)) : ('create.submit' | t) }}
   </button>
 </section>
